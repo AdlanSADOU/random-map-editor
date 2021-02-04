@@ -168,7 +168,7 @@ inline void Character::update(zz::Controls c, Map &map)
     rightPointPosU = {bounds.left + bounds.width - 8, bounds.top + bounds.height - 12};
     rightPointPosD = {bounds.left + bounds.width - 8, bounds.top + bounds.height - 4};
 
-    for (auto &&w : map.walls) {
+    for (auto &&w : map.wallTiles) {
         if (w.contains(topPointPosL) ||
             w.contains(topPointPosR))
             upSpeed = zero;

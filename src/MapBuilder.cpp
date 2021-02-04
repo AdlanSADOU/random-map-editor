@@ -112,11 +112,12 @@ void updateMapBuilder(sf::RenderWindow &window, Map &map)
         ImGui::SameLine(0, -1);
         ImGui::Text("Type: %s", tileTypes[map.mapTiles[selectedTileIdx].type].c_str());
         ImGui::Separator();
+        ImGui::Text("%d tiles loaded from tileset", tileRects.size());
 
         for (size_t i = 0; i < tileRects.size(); i++) {
             tileSprite.setTextureRect(tileRects[i]);
 
-            if (i % 5)
+            if (i % 4)
                 ImGui::SameLine();
             ImGui::ImageButton(tileSprite, {40, 40}, 1, sf::Color(30, 30, 30));
             if (ImGui::IsItemHovered()) {
@@ -194,8 +195,8 @@ void splitSpriteSheet()
     tileTexture.loadFromFile("./res/sprites/Tileset.png");
     textureSize = static_cast<sf::Vector2i>(tileTexture.getSize());
 
-    for (int y = 0; y <= textureSize.y; y += tileSize.y) {
-        for (int x = 0; x <= textureSize.x; x += tileSize.x) {
+    for (int y = 0; y < textureSize.y; y += tileSize.y) {
+        for (int x = 0; x < textureSize.x; x += tileSize.x) {
             sf::IntRect tileRect;
             tileRect = {x, y, tileSize.x, tileSize.y};
             tileRects.push_back(tileRect);

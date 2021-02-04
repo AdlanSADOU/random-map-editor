@@ -47,7 +47,7 @@ class Map : public sf::Sprite
     };
 
     sf::RenderTexture renderTexture;
-    std::vector<sf::FloatRect> walls;
+    std::vector<sf::FloatRect> wallTiles;
 
     float _chanceToStartAlive = 45;
     sf::Vector2i _size = {40, 22};
@@ -143,7 +143,7 @@ class Map : public sf::Sprite
     {
         if (mapTiles.size() > 0) {
             mapTiles.clear();
-            walls.clear();
+            wallTiles.clear();
         }
 
         auto m = this->_map;
@@ -279,9 +279,9 @@ class Map : public sf::Sprite
         for (size_t i = 0; i < mapTiles.size(); i++) {
             renderTexture.draw(mapTiles[i].sprite);
         }
-        // for (size_t i = 0; i < this->walls.size(); i++) {
+        // for (size_t i = 0; i < this->wallTiles.size(); i++) {
         //     sf::RectangleShape r = sf::RectangleShape({10,10});
-        //     r.setPosition(this->walls[i].getPosition());
+        //     r.setPosition(this->wallTiles[i].getPosition());
         //     renderTexture.draw(r);
         // }
         this->setTexture(renderTexture.getTexture());
@@ -401,7 +401,7 @@ class Map : public sf::Sprite
         case Tile::Type::WALL:
             tile.sprite.setTextureRect({w * 5, h * 6, w, h});
             // tile.sprite.setColor(sf::Color::Transparent);
-            this->walls.push_back(tile.sprite.getGlobalBounds());
+            this->wallTiles.push_back(tile.sprite.getGlobalBounds());
             isWall = true;
             break;
 

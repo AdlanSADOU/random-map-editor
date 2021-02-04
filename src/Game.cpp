@@ -72,7 +72,6 @@ void Game::run()
     window.setFramerateLimit(160);
     // window.setVerticalSyncEnabled(true);
 
-
     Map map;
     map.create(window.getSize(), {40, 27}, 4, 3, 3, 36);
     map.render();
@@ -106,8 +105,6 @@ void Game::run()
         while (window.pollEvent(e)) {
             ImGui::SFML::ProcessEvent(e);
             io = ImGui::GetIO();
-            // }
-            // if (sf::Keyboard::isKeyPressed(sf::Keyboard::K)) {
 
             if (e.type == sf::Event::Resized) {
                 sf::FloatRect fRect = {0, 0, (float)e.size.width, (float)e.size.height};
@@ -115,15 +112,20 @@ void Game::run()
                 renTexView.zoom(0.5);
             }
 
-            if (e.key.code == sf::Keyboard::Escape || e.type == sf::Event::Closed)
-                window.close();
+            // if (e.key.code == sf::Keyboard::Escape || e.type == sf::Event::Closed)
+            //     window.close();
 
             switch (e.type) {
+            case sf::Event::Closed:
+                window.close();
+                break;
             case sf::Event::EventType::KeyPressed:
                 onKeyHeld(e.key.code);
                 break;
 
             case sf::Event::EventType::KeyReleased:
+                if (e.key.code == sf::Keyboard::Escape)
+                    window.close();
                 onKeyUp(e.key.code);
                 break;
             default:
