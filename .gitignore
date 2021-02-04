@@ -1,0 +1,14 @@
+*.obj
+*.pdb
+*.ilk
+
+build/*.obj
+build/*.pdb
+build/*.ilk
+
+build/sample.exe
+build/x64_Debug/sample.exe
+
+
+*.zip
+client/build/win_debug_x64/client.exe
