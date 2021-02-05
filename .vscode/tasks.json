@@ -15,18 +15,23 @@
                 "/MDd",
                 "/Zi",
                 "/MP",
-
-                "/Fe:", "${workspaceFolder}/build/win_debug_x64.exe",
-
+                "/Fe:",
+                "${workspaceFolder}/build/win_debug_x64.exe",
                 "${workspaceFolder}/src/*.cpp",
                 "${workspaceFolder}/src/imgui/*.cpp",
-
-                "/I", "${workspaceFolder}/vendor/SFML_x64/SFML/include",
-                "/I", "${workspaceFolder}/src/imgui",
-
-                "/link", "/verbose:incr", "/time",
+                "/I",
+                "${workspaceFolder}/vendor/SFML_x64/SFML/include",
+                "/I",
+                "${workspaceFolder}/src/imgui",
+                "/link",
+                "/verbose:incr",
+                "/time",
                 "/LIBPATH:${workspaceFolder}/vendor/SFML_x64/SFML/x64_msvc_2019/debug/",
                 //"flac.lib","freetype.lib", "ogg.lib", "openal32.lib",
+
+                "Shell32.lib", // for dragDrop
+                "Ole32.lib",
+
                 "opengl32.lib",
                 "sfml-window-d.lib",
                 "sfml-system-d.lib",
@@ -54,7 +59,6 @@
                 "clear": true
             }
         },
-
         { // New release build
             "type": "shell",
             "label": "msvc++: [x64_Release] build",
@@ -66,17 +70,18 @@
                 "/O2",
                 "/GL",
                 "/MP",
-
-                "/Fe:", "${workspaceFolder}/build/win_release_x64.exe",
-
+                "/Fe:",
+                "${workspaceFolder}/build/win_release_x64.exe",
                 "${workspaceFolder}/src/*.cpp",
-
-
-                "/I", "${workspaceFolder}/include/",
-                "/I", "${workspaceFolder}/include/imgui/",
-                "/I", "${workspaceFolder}/vendor/SFML_x64/SFML/include",
-
-                "/link", "/verbose:incr", "/time",
+                "/I",
+                "${workspaceFolder}/include/",
+                "/I",
+                "${workspaceFolder}/include/imgui/",
+                "/I",
+                "${workspaceFolder}/vendor/SFML_x64/SFML/include",
+                "/link",
+                "/verbose:incr",
+                "/time",
                 "/LIBPATH:${workspaceFolder}/vendor/SFML_x64/SFML/x64_msvc_2019/release/",
                 //"flac.lib","freetype.lib", "ogg.lib", "openal32.lib",
                 "opengl32.lib",
@@ -107,7 +112,6 @@
                 "clear": true
             }
         },
-
         { // Old debug build with precompiled binaries
             "type": "shell",
             "label": "msvc++: [x64_Debug] build [OLD]",
@@ -119,17 +123,18 @@
                 "/MDd",
                 "/Zi",
                 "/MP",
-
-                "/Fe:", "${workspaceFolder}/build/win_debug_old_x64.exe",
-
+                "/Fe:",
+                "${workspaceFolder}/build/win_debug_old_x64.exe",
                 "${workspaceFolder}/src/*.cpp",
-
-
-                "/I", "${workspaceFolder}/include/",
-                "/I", "${workspaceFolder}/include/imgui/",
-                "/I", "${workspaceFolder}/vendor/SFML_x64/SFML-2.5.1/include",
-
-                "/link", "/verbose:incr", "/time",
+                "/I",
+                "${workspaceFolder}/include/",
+                "/I",
+                "${workspaceFolder}/include/imgui/",
+                "/I",
+                "${workspaceFolder}/vendor/SFML_x64/SFML-2.5.1/include",
+                "/link",
+                "/verbose:incr",
+                "/time",
                 "/LIBPATH:${workspaceFolder}/vendor/SFML_x64/SFML-2.5.1/lib/",
                 //"flac.lib","freetype.lib", "ogg.lib", "openal32.lib",
                 "opengl32.lib",
@@ -159,7 +164,6 @@
                 "clear": true
             }
         },
-
         {
             "type": "shell",
             "label": "msvc++: Server x64 debug build",
@@ -205,27 +209,29 @@
                 "clear": true
             }
         },
-
         { // Linux gcc build
             "type": "shell",
             "label": "gcc: [x64_Debug] build",
             "command": "g++",
             "args": [
                 "-fpermissive",
-                "-o", "${workspaceFolder}/build/linux_debug_x64",
-
+                "-o",
+                "${workspaceFolder}/build/linux_debug_x64",
                 "${workspaceFolder}/src/*.cpp",
-
-
-                "-I", "${workspaceFolder}/include/",
-                "-I", "${workspaceFolder}/include/imgui/",
-                "-I", "${workspaceFolder}/vendor/SFML_x64/SFML/include",
-
-                "-L", "${workspaceFolder}/vendor/SFML_x64/SFML/x64_Linux_gcc/debug/",
+                "-I",
+                "${workspaceFolder}/include/",
+                "-I",
+                "${workspaceFolder}/include/imgui/",
+                "-I",
+                "${workspaceFolder}/vendor/SFML_x64/SFML/include",
+                "-L",
+                "${workspaceFolder}/vendor/SFML_x64/SFML/x64_Linux_gcc/debug/",
                 //"flac.lib","freetype.lib", "ogg.lib", "openal32.lib",
                 // "opengl.so",
                 //  "-lopengl32",
-                "-lGL", "-lGLU", "-lglut",
+                "-lGL",
+                "-lGLU",
+                "-lglut",
                 "-lsfml-window-d",
                 "-lsfml-system-d",
                 "-lsfml-graphics-d",
@@ -251,27 +257,29 @@
                 "clear": true
             }
         },
-
         { // Linux gcc build
             "type": "shell",
             "label": "gcc: [x64 Release] build",
             "command": "g++",
             "args": [
                 "-fpermissive",
-                "-o", "${workspaceFolder}/build/linux_release_x64",
-
+                "-o",
+                "${workspaceFolder}/build/linux_release_x64",
                 "${workspaceFolder}/src/*.cpp",
-
-
-                "-I", "${workspaceFolder}/include/",
-                "-I", "${workspaceFolder}/include/imgui/",
-                "-I", "${workspaceFolder}/vendor/SFML_x64/SFML/include",
-
-                "-L", "${workspaceFolder}/vendor/SFML_x64/SFML/x64_Linux_gcc/release/",
+                "-I",
+                "${workspaceFolder}/include/",
+                "-I",
+                "${workspaceFolder}/include/imgui/",
+                "-I",
+                "${workspaceFolder}/vendor/SFML_x64/SFML/include",
+                "-L",
+                "${workspaceFolder}/vendor/SFML_x64/SFML/x64_Linux_gcc/release/",
                 //"flac.lib","freetype.lib", "ogg.lib", "openal32.lib",
                 // "opengl.so",
                 //  "-lopengl32",
-                "-lGL", "-lGLU", "-lglut",
+                "-lGL",
+                "-lGLU",
+                "-lglut",
                 "-lsfml-window-d",
                 "-lsfml-system-d",
                 "-lsfml-graphics-d",

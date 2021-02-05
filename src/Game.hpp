@@ -11,26 +11,28 @@
 
 #include <iostream>
 
+#include "Character.hpp"
 #include "SFML/Graphics.hpp"
 #include "Utils.hpp"
-#include "Character.hpp"
 
-struct Game
-{
+struct Game {
     float deltaTime;
     float fps;
     float speed = 0.1f;
 
     float xAxis = 0, yAxis = 0;
 
+    float zoom = 1;
+
     zz::Controls controls;
     sf::RenderWindow window;
     Character skeleton;
+    Map map;
 
     void create();
     void run();
 
-private:
+  private:
     void onKeyUp(sf::Keyboard::Key key);
     void onKeyHeld(sf::Keyboard::Key key);
 

@@ -59,6 +59,4 @@
         "list": "cpp",
         "*.rh": "cpp"
     },
-    "cmake.configureOnOpen": false,
-    "editor.fontFamily": "Droid Sans Mono"
 }

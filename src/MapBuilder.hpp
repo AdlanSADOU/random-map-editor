@@ -11,6 +11,5 @@ void updateMapBuilder(sf::RenderWindow &window, Map &map);
 void renderMapBuilder(sf::RenderWindow &window);
 void redrawMapBuilder();
 
-
 void renderMapBuilderGrid(sf::RenderWindow &window, Map &map);
 void splitSpriteSheet();

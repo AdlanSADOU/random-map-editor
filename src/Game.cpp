@@ -5,6 +5,199 @@
 
 #include <vector>
 
+#if _WIN32
+
+#include <windows.h>
+#endif
+
+std::vector<std::string> fileNames;
+std::vector<sf::Texture> spriteSheets;
+void loadDroppedImages();
+
+void Game::run()
+{
+    std::cout << "Starting game...\n";
+    window.create(sf::VideoMode{1280, 720}, "Proto", sf::Style::Default);
+    window.setFramerateLimit(160);
+    // window.setVerticalSyncEnabled(true);
+
+    map.create(window.getSize(), {40, 27}, 4, 3, 3, 36);
+    map.render();
+    InitMapBuilder(window, map);
+
+    skeleton.create();
+
+    sf::Vector2u windowSize = window.getSize();
+    sf::View renTexView = map.renderTexture.getView();
+    sf::View defaultView = window.getDefaultView();
+    renTexView.zoom(this->zoom);
+
+    sf::ContextSettings settings = window.getSettings();
+    ImGui::SFML::Init(window, true);
+
+    ImGuiWindowFlags fpsFlags = 0;
+    fpsFlags |= ImGuiWindowFlags_NoTitleBar;
+    fpsFlags |= ImGuiWindowFlags_NoResize;
+    fpsFlags |= ImGuiWindowFlags_NoDecoration;
+    bool p_open;
+
+    sf::Clock deltaClock;
+    sf::Clock clock;
+    sf::Time previousTime = clock.getElapsedTime();
+    sf::Time currentTime;
+    sf::Time t_deltaTime;
+
+    HWND hwnd = window.getSystemHandle();
+    LPDROPTARGET dropTarget = NULL;
+    RegisterDragDrop(hwnd, dropTarget);
+
+    DragAcceptFiles(hwnd, TRUE);
+    MSG msg;
+    msg.message = static_cast<UINT>(~WM_QUIT);
+
+    /**
+     * Make a proper message loop some day
+     * right now, WM_DROPFILES gets skipped sometimes, somehow
+     */
+    while (msg.message != WM_QUIT) {
+
+        //* Win32 messages /////////////////////////////////////////
+        HACCEL hAccelTable = NULL;
+
+        if (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE) > 0) {
+            if (!TranslateAcceleratorW(msg.hwnd, hAccelTable, &msg)) {
+                if (msg.message == WM_DROPFILES) {
+                    fileNames.clear();
+
+                    // MessageBox(hwnd, "some text", "idk", MB_OK | MB_RETRYCANCEL);
+
+                    HDROP drop = (HDROP)msg.wParam;
+                    UINT filePathesCount = DragQueryFileW(drop, 0xFFFFFFFF, NULL, 512); //If "0xFFFFFFFF" as the second parameter: return the count of files dropped
+                    wchar_t *fileName = NULL;
+                    UINT longestFileNameLength = 0;
+                    for (UINT i = 0; i < filePathesCount; ++i) {
+                        //If NULL as the third parameter: return the length of the path, not counting the trailing '0'
+                        UINT fileNameLength = DragQueryFileW(drop, i, NULL, 512) + 1;
+                        if (fileNameLength > longestFileNameLength) {
+                            longestFileNameLength = fileNameLength;
+                            fileName = (wchar_t *)realloc(fileName, longestFileNameLength * sizeof(*fileName));
+                        }
+                        DragQueryFileW(drop, i, fileName, fileNameLength);
+
+                        // std::wcout << fileName << std::endl;
+
+                        char *s = (char *)malloc(fileNameLength);
+                        size_t size = std::wcstombs(s, fileName, fileNameLength);
+                        if (size <= 0)
+                            printf("something went wrong...! size: %zd\n", size);
+
+                        std::string stmp(s);
+                        if (!std::strstr(stmp.c_str(), ".png")) {
+                            printf("not a png file\n");
+                            break;
+                        }
+                        fileNames.push_back(s);
+                    }
+                    free(fileName);
+                    DragFinish(drop);
+
+                    /**
+                     *! make some kind of ImGui popup asking for the size of a tile
+                     * now that we have the file names that were droppped
+                     * we can load those .png files into textures
+                    */
+                    loadDroppedImages(); // should this be called here?
+                }
+
+                TranslateMessage(&msg);
+                DispatchMessageW(&msg);
+            }
+        }
+
+        //* END Win32 messages
+        //* ///////////////////////////////////////
+
+        else {
+            sf::Event e;
+            ImGuiIO io;
+            while (window.pollEvent(e)) {
+                ImGui::SFML::ProcessEvent(e);
+                sf::FloatRect fRect = {0, 0, (float)e.size.width, (float)e.size.height};
+
+                switch (e.type) {
+                case sf::Event::EventType::Resized:
+                    renTexView.setSize({(float)e.size.width, (float)e.size.height});
+                    renTexView.zoom(this->zoom);
+                    break;
+                case sf::Event::Closed:
+                    // window.close();
+                    msg.message = WM_QUIT;
+                    break;
+                case sf::Event::KeyPressed:
+                    onKeyHeld(e.key.code);
+                    break;
+
+                case sf::Event::KeyReleased:
+                    if (e.key.code == sf::Keyboard::Escape) {
+                        // window.close();
+                        msg.message = WM_QUIT;
+                    }
+
+                    onKeyUp(e.key.code);
+                    break;
+                default:
+                    break;
+                }
+            }
+
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::K)) {
+                map.generate();
+                map.render();
+                renderMapBuilderGrid(window, map);
+            }
+
+            ImGui::SFML::Update(window, deltaClock.restart());
+
+            renTexView.setCenter(skeleton.getPosition());
+
+            window.setView(renTexView);
+            window.clear(sf::Color(12, 12, 12, 255));
+
+            { //* update()
+                map.update();
+                skeleton.update(controls, map);
+                updateMapBuilder(window, map);
+            }
+
+            { //* render()
+                window.draw(map);
+                renderMapBuilder(window);
+                window.draw(skeleton);
+            }
+
+            ImGui::ShowDemoWindow();
+            ImGui::Begin("Info", &p_open, fpsFlags);
+            ImGui::Text("fps: %.2f, %.2fms", fps, deltaTime);
+            ImGui::End();
+
+            ImGui::SFML::Render(window);
+
+            window.display();
+
+            t_deltaTime = deltaClock.getElapsedTime();
+            currentTime = clock.getElapsedTime();
+            fps = 1.0f / (currentTime.asSeconds() - previousTime.asSeconds());
+            previousTime = currentTime;
+            deltaTime = 1.0f / fps * 100.0f;
+        }
+    }
+
+    DragAcceptFiles(hwnd, FALSE);
+    std::cout << "Game Closed!\n";
+}
+
+//* Utility functions ///////////////////////////
+
 void Game::onKeyHeld(sf::Keyboard::Key key)
 {
     switch (key) {
@@ -63,119 +256,4 @@ void Game::onKeyUp(sf::Keyboard::Key key)
     default:
         break;
     }
-}
-
-void Game::run()
-{
-    std::cout << "Starting game...\n";
-    window.create(sf::VideoMode{1280, 720}, "Proto", sf::Style::Default);
-    window.setFramerateLimit(160);
-    // window.setVerticalSyncEnabled(true);
-
-    Map map;
-    map.create(window.getSize(), {40, 27}, 4, 3, 3, 36);
-    map.render();
-    InitMapBuilder(window, map);
-
-    skeleton.create();
-
-    sf::Vector2u windowSize = window.getSize();
-    sf::View renTexView = map.renderTexture.getView();
-    sf::View defaultView = window.getDefaultView();
-    renTexView.zoom(1);
-
-    sf::ContextSettings settings = window.getSettings();
-    ImGui::SFML::Init(window, true);
-    ImGuiWindowFlags fpsFlags = 0;
-    fpsFlags |= ImGuiWindowFlags_NoTitleBar;
-    fpsFlags |= ImGuiWindowFlags_NoResize;
-    fpsFlags |= ImGuiWindowFlags_NoDecoration;
-    bool p_open;
-
-    sf::Clock deltaClock;
-    sf::Clock clock;
-    sf::Time previousTime = clock.getElapsedTime();
-    sf::Time currentTime;
-    sf::Time t_deltaTime;
-
-    while (window.isOpen()) {
-        sf::Event e;
-        ImGuiIO io;
-
-        while (window.pollEvent(e)) {
-            ImGui::SFML::ProcessEvent(e);
-            io = ImGui::GetIO();
-
-            if (e.type == sf::Event::Resized) {
-                sf::FloatRect fRect = {0, 0, (float)e.size.width, (float)e.size.height};
-                renTexView.setSize({(float)e.size.width, (float)e.size.height});
-                renTexView.zoom(0.5);
-            }
-
-            // if (e.key.code == sf::Keyboard::Escape || e.type == sf::Event::Closed)
-            //     window.close();
-
-            switch (e.type) {
-            case sf::Event::Closed:
-                window.close();
-                break;
-            case sf::Event::EventType::KeyPressed:
-                onKeyHeld(e.key.code);
-                break;
-
-            case sf::Event::EventType::KeyReleased:
-                if (e.key.code == sf::Keyboard::Escape)
-                    window.close();
-                onKeyUp(e.key.code);
-                break;
-            default:
-                break;
-            }
-        }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::K)) {
-            map.generate();
-            map.render();
-            // InitMapBuilder(window, map);
-            renderMapBuilderGrid(window, map);
-        }
-
-        ImGui::SFML::Update(window, deltaClock.restart());
-
-        renTexView.setCenter(skeleton.getPosition());
-
-        window.setView(renTexView);
-        window.clear(sf::Color(12, 12, 12, 255));
-
-        { //* update()
-            map.update();
-            skeleton.update(controls, map);
-            updateMapBuilder(window, map);
-        }
-
-        { //* render()
-            window.draw(map);
-            renderMapBuilder(window);
-            // skeleton.renderDebugInfo(window);
-            window.draw(skeleton);
-        }
-
-        // renderMapBuilder(window, map);
-
-        ImGui::ShowDemoWindow();
-
-        ImGui::Begin("Info", &p_open, fpsFlags);
-        ImGui::Text("fps: %.2f, %.2fms", fps, deltaTime);
-
-        ImGui::End();
-
-        ImGui::SFML::Render(window);
-        window.display();
-
-        t_deltaTime = deltaClock.getElapsedTime();
-        currentTime = clock.getElapsedTime();
-        fps = 1.0f / (currentTime.asSeconds() - previousTime.asSeconds());
-        previousTime = currentTime;
-        deltaTime = 1.0f / fps * 100.0f;
-    }
-    std::cout << "Game Closed!\n";
 }

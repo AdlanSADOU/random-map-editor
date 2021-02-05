@@ -9,6 +9,20 @@ std::vector<sf::IntRect> tileRects;
 sf::Texture tileTexture;
 sf::Sprite tileSprite;
 
+/**
+ * a spriteSheet should:
+ * derive sf::Sprite
+ * load it's spriteSheet into a member texture; .create(fineName, tileSize)
+ * split itself
+ * set it's sprite
+ */
+struct SpriteSheet {
+    std::vector<sf::IntRect> tileRects;
+    sf::Texture tileTexture;
+    sf::Sprite tileSprite;
+};
+std::vector<SpriteSheet> spriteSheets;
+
 std::string tileTypes[]{
     {"GROUND"},
     {"TOP"},
@@ -50,28 +64,20 @@ void InitMapBuilder(sf::RenderWindow &window, Map &map)
 }
 
 Map::Tile selectedTile;
-Map::Tile::Type PrevSelectedType;
 
 void updateMapBuilder(sf::RenderWindow &window, Map &map)
 {
+    ImGuiIO io = ImGui::GetIO();
+
     sf::Vector2f mousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
     static size_t selectedTileIdx = -1;
     static bool isSelection = false;
-
-    /** 3. iterate over grid
-     *     3.01 for earch square
-     *          3.02 highlight on hover
-     *          3.03 if clicked & square contains mouse
-     *              3.04 reset currentSelected... (previous selection)
-     *              3.05 push squares into currentSelected...
-     *              3.06 highlight all squares of the same type
-     */
 
     for (size_t gridIdx = 0; gridIdx < grid.size(); gridIdx++) {
         if (grid[gridIdx].getGlobalBounds().contains(mousePos)) {
             grid[gridIdx].setFillColor(sf::Color(20, 20, 20, 100));
 
-            if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+            if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && !io.WantCaptureMouse) {
                 if (currentSelectedGridSquares.size() > 0)
                     currentSelectedGridSquares.clear();
 
@@ -91,50 +97,60 @@ void updateMapBuilder(sf::RenderWindow &window, Map &map)
     }
 
     for (size_t i = 0; i < currentSelectedGridSquares.size(); i++) {
-        currentSelectedGridSquares[i]->setFillColor(sf::Color(20, 20, 20, 100));
+        currentSelectedGridSquares[i]->setFillColor(sf::Color(20, 160, 20, 100));
     }
 
     redrawMapBuilder();
 
-    for (int mapIdx = 0; mapIdx < map.mapTiles.size(); mapIdx++) {
-        if (selectedTileIdx == -1) break;
-        if (map.mapTiles[mapIdx].sprite.getPosition() == map.mapTiles[selectedTileIdx].sprite.getPosition()) {
-            ImGui::Text("%s", tileTypes[map.mapTiles[mapIdx].type].c_str());
-        }
+    { //* tile type debug info
+        // for (int mapIdx = 0; mapIdx < map.mapTiles.size(); mapIdx++) {
+        //     if (selectedTileIdx == -1)
+        //         break;
+        //     if (map.mapTiles[mapIdx].sprite.getPosition() == map.mapTiles[selectedTileIdx].sprite.getPosition()) {
+        //         ImGui::Text("%s", tileTypes[map.mapTiles[mapIdx].type].c_str());
+        //     }
+        // }
     }
 
+    static bool p_open;
     if (isSelection) {
         static int clickedIndex = -1;
-        ImGui::Begin("Map Builder");
 
-        ImGui::Text("Selected Tile:");
-        ImGui::Image(map.mapTiles[selectedTileIdx].sprite, {64, 64});
-        ImGui::SameLine(0, -1);
-        ImGui::Text("Type: %s", tileTypes[map.mapTiles[selectedTileIdx].type].c_str());
-        ImGui::Separator();
-        ImGui::Text("%d tiles loaded from tileset", tileRects.size());
+        {   //* GUI: Map Builder//////////////////////////////////////////////////////
+            //* //////////////////////////////////////////////////////////////////////
+            /**
+             * display all loaded sprite sheets
+             */
+            ImGui::Begin("Map Builder", &p_open, ImGuiWindowFlags_Modal | ImGuiWindowFlags_MenuBar);
+            ImGui::Text("Selected Tile:");
+            ImGui::Text("wan capture mouse: %d", io.WantCaptureMouse);
+            ImGui::Image(map.mapTiles[selectedTileIdx].sprite, {64, 64});
+            ImGui::SameLine(0, -1);
+            ImGui::Text("Type: %s", tileTypes[map.mapTiles[selectedTileIdx].type].c_str());
+            ImGui::Separator();
+            ImGui::Text("%d tiles loaded from tileset", tileRects.size());
 
-        for (size_t i = 0; i < tileRects.size(); i++) {
-            tileSprite.setTextureRect(tileRects[i]);
+            for (size_t i = 0; i < tileRects.size(); i++) {
+                tileSprite.setTextureRect(tileRects[i]);
 
-            if (i % 4)
-                ImGui::SameLine();
-            ImGui::ImageButton(tileSprite, {40, 40}, 1, sf::Color(30, 30, 30));
-            if (ImGui::IsItemHovered()) {
-            }
-            if (ImGui::IsItemClicked()) {
-                clickedIndex = i;
+                if (i % 4)
+                    ImGui::SameLine();
+                ImGui::ImageButton(tileSprite, {40, 40}, 1, sf::Color(30, 30, 30));
 
-                Map::Tile selectedTile = map.mapTiles[selectedTileIdx];
-                for (size_t j = 0; j < map.mapTiles.size(); j++) {
-                    if (map.mapTiles[j].type == selectedTile.type)
-                        map.mapTiles[j].sprite.setTextureRect(tileRects[clickedIndex]);
+                if (ImGui::IsItemClicked()) {
+                    clickedIndex = i;
+
+                    Map::Tile selectedTile = map.mapTiles[selectedTileIdx];
+                    for (size_t j = 0; j < map.mapTiles.size(); j++) {
+                        if (map.mapTiles[j].type == selectedTile.type)
+                            map.mapTiles[j].sprite.setTextureRect(tileRects[clickedIndex]);
+                    }
+                    map.redraw();
+                    break;
                 }
-                map.redraw();
-                break;
             }
-        }
-        ImGui::End();
+            ImGui::End();
+        } //* //////////////////////////////////////////////////////
     }
 }
 
@@ -179,20 +195,14 @@ void renderMapBuilder(sf::RenderWindow &window)
 //* Utility functions
 
 /**
- * push the selected tile into a vector
- * use that vector to set the right tile rects in the Map
- * then redraw the map
- *
- * Ultimately, the selected tiles must be saved into a file
- * then loaded at runtime
+ * Load the sprite sheets
  */
-void splitSpriteSheet()
+void splitSpriteSheet(const std::string fileName, sf::Vector2i tileSize)
 {
-    sf::Vector2i tileSize = {32, 32};
     sf::Vector2i textureSize = {};
     tileSprite.setTexture(tileTexture);
 
-    tileTexture.loadFromFile("./res/sprites/Tileset.png");
+    tileTexture.loadFromFile(fileName);
     textureSize = static_cast<sf::Vector2i>(tileTexture.getSize());
 
     for (int y = 0; y < textureSize.y; y += tileSize.y) {
@@ -201,5 +211,21 @@ void splitSpriteSheet()
             tileRect = {x, y, tileSize.x, tileSize.y};
             tileRects.push_back(tileRect);
         }
+    }
+}
+
+extern std::vector<std::string> fileNames;
+extern std::vector<sf::Texture> spriteSheetTextures;
+
+void loadDroppedImages()
+{
+    for (auto &&name : fileNames) {
+        printf(name.c_str());
+        puts("\n");
+        sf::Texture tmp;
+        if (!tmp.loadFromFile(name))
+            printf("Could not load file: %s", name.c_str());
+        else
+            spriteSheetTextures.push_back(tmp);
     }
 }
