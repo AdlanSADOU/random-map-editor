@@ -3,7 +3,6 @@
 
 int main(int argc, char const *argv[])
 {
-    Game game;
-    game.run();
+    run();
     return 0;
 }

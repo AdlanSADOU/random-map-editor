@@ -12,4 +12,4 @@ void renderMapBuilder(sf::RenderWindow &window);
 void redrawMapBuilder();
 
 void renderMapBuilderGrid(sf::RenderWindow &window, Map &map);
-void splitSpriteSheet();
+void splitSpriteSheet(const std::string fileName, sf::Vector2i tileSize);

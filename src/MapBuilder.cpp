@@ -15,13 +15,59 @@ sf::Sprite tileSprite;
  * load it's spriteSheet into a member texture; .create(fineName, tileSize)
  * split itself
  * set it's sprite
+ *
+ * If our spriteSheet is just a sprite whose tiles are just rects
  */
 struct SpriteSheet {
-    std::vector<sf::IntRect> tileRects;
-    sf::Texture tileTexture;
-    sf::Sprite tileSprite;
+    sf::Sprite sprite;
+    sf::Texture texture;
+    sf::Image image;
+
+    std::vector<sf::IntRect> rects;
+    std::vector<sf::Texture> textures;
+
+    sf::Vector2i _textureSize = {};
+    sf::Vector2i _tileSize = {};
+    std::string fileName;
+
+    void create(std::string fileName, sf::Vector2i tileSize)
+    {
+        this->_tileSize = tileSize;
+        this->fileName = fileName;
+
+        if (!this->texture.loadFromFile(fileName))
+            return;
+
+        if (!this->image.loadFromFile(fileName))
+            return;
+
+        this->sprite.setTexture(this->texture);
+        this->_textureSize = static_cast<sf::Vector2i>(this->texture.getSize());
+
+        this->split();
+    }
+
+    void split()
+    {
+        for (int y = 0; y < this->_textureSize.y; y += this->_tileSize.y) {
+            for (int x = 0; x < this->_textureSize.x; x += this->_tileSize.x) {
+                static int i;
+
+                sf::IntRect tmpRect;
+                tmpRect = {x, y, this->_tileSize.x, this->_tileSize.y};
+                this->rects.push_back(tmpRect);
+
+                sf::Texture tmpTexture;
+                sf::Vector2u dimensions = this->image.getSize();
+                size_t size = dimensions.x * dimensions.y * 4;
+                tmpTexture.loadFromImage(this->image, tmpRect);
+                this->textures.push_back(tmpTexture);
+            }
+        }
+    }
 };
-std::vector<SpriteSheet> spriteSheets;
+
+static std::vector<SpriteSheet> spriteSheets;
 
 std::string tileTypes[]{
     {"GROUND"},
@@ -31,6 +77,8 @@ std::string tileTypes[]{
     {"RIGHT"},
     {"TOP_LEFT"},
     {"TOP_RIGHT"},
+    {"LEFT_RIGHT"},
+    {"TOP_BOTTOM"},
     {"BOTTOM_LEFT"},
     {"BOTTOM_RIGHT"},
     {"TOP_LEFT_RIGHT"},
@@ -47,19 +95,34 @@ std::string tileTypes[]{
     {"WALL_TOP_RIGHT"},
     {"WALL_BOTTOM_LEFT"},
     {"WALL_BOTTOM_RIGHT"},
+    {"WALL_TOP_BOTTOM"},
+    {"WALL_LEFT_RIGHT"},
     {"WALL_TOP_LEFT_RIGHT"},
     {"WALL_LEFT_TOP_BOTTOM"},
     {"WALL_BOTTOM_LEFT_RIGHT"},
     {"WALL_RIGHT_TOP_BOTTOM"},
-};
+    {"WALLS_TOP_LEFT_CORNER_TL"},
+    {"WALL_BOTTOM_LEFT_CORNER"},
+    {"WALL_TOP_RIGHT_CORNER"},
+    {"WALL_TOP_LEFT_CORNER"},
+    {"WALL_LOOP"}};
 
 void InitMapBuilder(sf::RenderWindow &window, Map &map)
 {
-    splitSpriteSheet();
-
     float width = map.getGlobalBounds().width;
     float height = map.getGlobalBounds().height;
     gridRenderTexture.create(width, height);
+
+    {
+        SpriteSheet sheet1;
+        sheet1.create("res/sprites/walls.png", {32, 32});
+        spriteSheets.push_back(sheet1);
+    }
+    {
+        SpriteSheet sheet1;
+        sheet1.create("res/sprites/tile_set.png", {32, 32});
+        spriteSheets.push_back(sheet1);
+    }
     renderMapBuilderGrid(window, map);
 }
 
@@ -103,52 +166,76 @@ void updateMapBuilder(sf::RenderWindow &window, Map &map)
     redrawMapBuilder();
 
     { //* tile type debug info
-        // for (int mapIdx = 0; mapIdx < map.mapTiles.size(); mapIdx++) {
-        //     if (selectedTileIdx == -1)
-        //         break;
-        //     if (map.mapTiles[mapIdx].sprite.getPosition() == map.mapTiles[selectedTileIdx].sprite.getPosition()) {
-        //         ImGui::Text("%s", tileTypes[map.mapTiles[mapIdx].type].c_str());
-        //     }
-        // }
+        for (int mapIdx = 0; mapIdx < map.mapTiles.size(); mapIdx++) {
+            if (selectedTileIdx == -1)
+                break;
+            if (map.mapTiles[mapIdx].sprite.getPosition() == map.mapTiles[selectedTileIdx].sprite.getPosition()) {
+                ImGui::Text("%s", tileTypes[map.mapTiles[mapIdx].type].c_str());
+            }
+        }
     }
 
-    static bool p_open;
     if (isSelection) {
-        static int clickedIndex = -1;
-
-        {   //* GUI: Map Builder//////////////////////////////////////////////////////
+        {
+            //* GUI: Map Builder//////////////////////////////////////////////////////
             //* //////////////////////////////////////////////////////////////////////
             /**
              * display all loaded sprite sheets
              */
-            ImGui::Begin("Map Builder", &p_open, ImGuiWindowFlags_Modal | ImGuiWindowFlags_MenuBar);
-            ImGui::Text("Selected Tile:");
+            static bool p_open;
+            static int clickedIndex = -1;
+            static ImGuiWindowFlags builder_flags;
+            builder_flags |= ImGuiWindowFlags_Modal;
+            builder_flags |= ImGuiWindowFlags_MenuBar;
+
+            ImGui::Begin("Map Builder", &p_open, builder_flags);
+            ImGui::Text("Selected Tile: %d", clickedIndex);
             ImGui::Text("wan capture mouse: %d", io.WantCaptureMouse);
             ImGui::Image(map.mapTiles[selectedTileIdx].sprite, {64, 64});
             ImGui::SameLine(0, -1);
             ImGui::Text("Type: %s", tileTypes[map.mapTiles[selectedTileIdx].type].c_str());
             ImGui::Separator();
-            ImGui::Text("%d tiles loaded from tileset", tileRects.size());
 
-            for (size_t i = 0; i < tileRects.size(); i++) {
-                tileSprite.setTextureRect(tileRects[i]);
+            // static char str0[128] = "Hello, world!";
+            // if (ImGui::InputText("input text", str0, IM_ARRAYSIZE(str0))) {
+            //     if ()
+            // }
 
-                if (i % 4)
-                    ImGui::SameLine();
-                ImGui::ImageButton(tileSprite, {40, 40}, 1, sf::Color(30, 30, 30));
+            static int y = 0;
+            for (size_t k = 0; k < spriteSheets.size(); k++) {
+                ImGui::Text("%d tiles loaded from tileset", spriteSheets[k].textures.size());
+                static sf::Vector2i selectedTilePosition = {};
 
-                if (ImGui::IsItemClicked()) {
-                    clickedIndex = i;
+                // looping over textures in given spriteSheet
+                for (size_t i = 0; i < spriteSheets[k].textures.size(); i++) {
+                    // tileSprite.setTextureRect(spriteSheets[k].textures[i]);
 
-                    Map::Tile selectedTile = map.mapTiles[selectedTileIdx];
-                    for (size_t j = 0; j < map.mapTiles.size(); j++) {
-                        if (map.mapTiles[j].type == selectedTile.type)
-                            map.mapTiles[j].sprite.setTextureRect(tileRects[clickedIndex]);
+                    static int x = (spriteSheets[k]._textureSize.x / spriteSheets[k]._tileSize.x);
+                    if (i % x) {
+                        ImGui::SameLine();
+                    } else if (i > 0) y++;
+
+                    ImGui::ImageButton((spriteSheets[k].textures[i]), {40, 40}, 1, sf::Color(30, 30, 30));
+
+                    if (ImGui::IsItemClicked()) {
+                        clickedIndex = i;
+                        selectedTilePosition = {(int)i % x, (int)y};
+
+                        Map::Tile selectedTile = map.mapTiles[selectedTileIdx];
+                        for (size_t j = 0; j < map.mapTiles.size(); j++) {
+                            if (map.mapTiles[j].type == selectedTile.type) {
+                                // map.mapTiles[j].sprite.setTextureRect(spriteSheets[k].rects[clickedIndex]);
+                                // Ni
+                                map.mapTiles[j].sprite.setTexture(spriteSheets[k].textures[clickedIndex], true);
+                            }
+                        }
+                        map.redraw();
+                        break;
                     }
-                    map.redraw();
-                    break;
                 }
+                ImGui::Text("tile at (%d, %d)", selectedTilePosition.x, selectedTilePosition.y);
             }
+            y = 0;
             ImGui::End();
         } //* //////////////////////////////////////////////////////
     }
@@ -175,10 +262,11 @@ void renderMapBuilderGrid(sf::RenderWindow &window, Map &map)
     redrawMapBuilder();
 }
 
+// 2. draw grid into gridRenderTexture
 void redrawMapBuilder()
 {
     gridRenderTexture.clear(sf::Color::Transparent);
-    // 2. draw grid into gridRenderTexture
+
     for (size_t i = 0; i < grid.size(); i++) {
         gridRenderTexture.draw(grid[i]);
     }
@@ -226,6 +314,9 @@ void loadDroppedImages()
         if (!tmp.loadFromFile(name))
             printf("Could not load file: %s", name.c_str());
         else
-            spriteSheetTextures.push_back(tmp);
+            spriteSheetTextures.push_back(tmp); // TODO: this is redundant right now, not used
+        SpriteSheet sheet;
+        sheet.create(name, {32, 32});
+        spriteSheets.push_back(sheet);
     }
 }

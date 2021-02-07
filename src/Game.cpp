@@ -11,26 +11,27 @@
 #endif
 
 std::vector<std::string> fileNames;
-std::vector<sf::Texture> spriteSheets;
+std::vector<sf::Texture> spriteSheetTextures;
 void loadDroppedImages();
 
-void Game::run()
+void run()
 {
-    std::cout << "Starting game...\n";
-    window.create(sf::VideoMode{1280, 720}, "Proto", sf::Style::Default);
-    window.setFramerateLimit(160);
-    // window.setVerticalSyncEnabled(true);
+    {
+        window.create(sf::VideoMode{1280, 720}, "Proto", sf::Style::Default);
+        window.setFramerateLimit(160);
+        // window.setVerticalSyncEnabled(true);
 
-    map.create(window.getSize(), {40, 27}, 4, 3, 3, 36);
-    map.render();
-    InitMapBuilder(window, map);
+        map.create(window.getSize(), {40,40}, 4, 3, 3, 36);
+        map.render();
+        InitMapBuilder(window, map);
 
-    skeleton.create();
+        skeleton.create();
+    }
 
     sf::Vector2u windowSize = window.getSize();
     sf::View renTexView = map.renderTexture.getView();
     sf::View defaultView = window.getDefaultView();
-    renTexView.zoom(this->zoom);
+    renTexView.zoom(zoom);
 
     sf::ContextSettings settings = window.getSettings();
     ImGui::SFML::Init(window, true);
@@ -127,7 +128,7 @@ void Game::run()
                 switch (e.type) {
                 case sf::Event::EventType::Resized:
                     renTexView.setSize({(float)e.size.width, (float)e.size.height});
-                    renTexView.zoom(this->zoom);
+                    renTexView.zoom(zoom);
                     break;
                 case sf::Event::Closed:
                     // window.close();
@@ -184,11 +185,13 @@ void Game::run()
 
             window.display();
 
-            t_deltaTime = deltaClock.getElapsedTime();
-            currentTime = clock.getElapsedTime();
-            fps = 1.0f / (currentTime.asSeconds() - previousTime.asSeconds());
-            previousTime = currentTime;
-            deltaTime = 1.0f / fps * 100.0f;
+            {
+                t_deltaTime = deltaClock.getElapsedTime();
+                currentTime = clock.getElapsedTime();
+                fps = 1.0f / (currentTime.asSeconds() - previousTime.asSeconds());
+                previousTime = currentTime;
+                deltaTime = 1.0f / fps * 100.0f;
+            }
         }
     }
 
@@ -198,7 +201,7 @@ void Game::run()
 
 //* Utility functions ///////////////////////////
 
-void Game::onKeyHeld(sf::Keyboard::Key key)
+void onKeyHeld(sf::Keyboard::Key key)
 {
     switch (key) {
     case sf::Keyboard::Space:
@@ -232,7 +235,7 @@ void Game::onKeyHeld(sf::Keyboard::Key key)
     }
 }
 
-void Game::onKeyUp(sf::Keyboard::Key key)
+void onKeyUp(sf::Keyboard::Key key)
 {
     switch (key) {
     case sf::Keyboard::Space:
