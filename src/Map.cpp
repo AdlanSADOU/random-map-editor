@@ -141,7 +141,13 @@ void Map::render()
             bool walls_bottom_left_right = (wall_bottom && wall_left && wall_right && !wall_top);
             bool wall_loop = (wall_left && wall_top && wall_bottom && wall_right);
 
-            bool walls_top_left_corner_tl = (!wall_top && !wall_left) && (GROUND(x - 1, y - 1));
+            // TODO: we should rethink these corner cases, we have poor naming convention right now
+            // bool walls_top_left_corner_tl = (!wall_top && !wall_left && wall_bottom && wall_right) && (GROUND(x - 1, y - 1) && !GROUND(x - 1, y + 1));
+            // bool walls_top_left_bottom_corner_tl_bl = (!wall_top && !wall_left && !wall_bottom && wall_right) && (GROUND(x - 1, y - 1) && GROUND(x - 1, y + 1) && !GROUND(x + 1, y - 1));
+            // bool walls_top_left_bottom_right_corner_tl_bl_tr = (!wall_top && !wall_left && !wall_bottom && !wall_right) && (GROUND(x - 1, y - 1) && GROUND(x - 1, y + 1) && GROUND(x + 1, y - 1));
+            // bool walls_top_left_bottom_right_corner_tl_bl_tr_br = (!wall_top && !wall_left && !wall_bottom && !wall_right) && (GROUND(x - 1, y - 1) && GROUND(x - 1, y + 1) && GROUND(x + 1, y - 1));
+            // // bool walls_left_corner_tr = (!wall_left && (GROUND(x, y-1)  && GROUND(x, y+1) && !GROUND(x)))
+            // bool walls_top_left_right_corner_tl_tr = (!wall_top && !wall_left && !wall_right && (GROUND(x-1, y-1) && GROUND(x+1, y-1)));
 
             sf::Vector2f pos = {(x * 32.f), (y * 32.f)};
 
@@ -179,7 +185,7 @@ void Map::render()
             else if (corners_right_top_bottom) //ok
                 PushTile(pos, Tile::Type::RIGHT_TOP_BOTTOM);
 
-            // // WALLS
+            // WALLS
             else if (wall_top && !wall_left && !wall_right && !wall_bottom) //ok
                 PushTile(pos, Tile::Type::WALL_TOP);
             else if (wall_left && !wall_top && !wall_bottom && !wall_right) //ok
@@ -189,14 +195,8 @@ void Map::render()
             else if (wall_right && !wall_top && !wall_bottom && !wall_left) //ok
                 PushTile(pos, Tile::Type::WALL_RIGHT);
 
-            else if (wall_top_bottom) {
+            else if (wall_top_bottom) //ok
                 PushTile(pos, Tile::Type::WALL_TOP_BOTTOM);
-                printf("TOP BOTTOM\n");
-            }
-            // // else if (WALL(x + 1, y) && WALL(x, y + 1) && !WALL(x + 1, y + 1) && !WALL(x - 1, y)) {
-            // //     PushTile(pos, Tile::Type::WALL_LEFT_RIGHT);
-            // //     printf("LEFT RIGHT\n");}
-
             else if (wall_top_left) //ok
                 PushTile(pos, Tile::Type::WALL_TOP_LEFT);
 
@@ -218,6 +218,14 @@ void Map::render()
 
             else if (walls_top_left_corner_tl)
                 PushTile(pos, Tile::Type::WALLS_TOP_LEFT_CORNER_TL);
+            else if (walls_top_left_bottom_corner_tl_bl)
+                PushTile(pos, Tile::Type::WALLS_TOP_LEFT_BOTTOM_CORNER_TL_BL);
+            else if (walls_top_left_bottom_right_corner_tl_bl_tr)
+                PushTile(pos, Tile::Type::WALLS_TOP_LEFT_BOTTOM_RIGHT_CORNER_TL_BL_TR);
+            else if (walls_top_left_bottom_right_corner_tl_bl_tr_br)
+                PushTile(pos, Tile::Type::WALLS_TOP_LEFT_BOTTOM_RIGHT_CORNER_TL_BL_TR_BR);
+            else if (walls_top_left_right_corner_tl_tr)
+                PushTile(pos, Tile::Type::WALLS_TOP_LEFT_RIGHT_CORNER_TL_TR);
 
             // else if (WALL(x + 1, y) && WALL(x, y + 1) && !WALL(x + 1, y + 1) && !WALL(x - 1, y))
             //     PushTile(pos, Tile::Type::WALL_BOTTOM_RIGHT_CORNER);
@@ -426,7 +434,19 @@ void Map::PushTile(sf::Vector2f position, Tile::Type type)
         break;
 
     case Tile::Type::WALLS_TOP_LEFT_CORNER_TL:
-        tile.sprite.setTextureRect({w * 1, h * 7, w, h});
+        tile.sprite.setTextureRect({w * 5, h * 5, w, h});
+        break;
+    case Tile::Type::WALLS_TOP_LEFT_BOTTOM_CORNER_TL_BL:
+        tile.sprite.setTextureRect({w * 0, h * 5, w, h});
+        break;
+    case Tile::Type::WALLS_TOP_LEFT_BOTTOM_RIGHT_CORNER_TL_BL_TR:
+        tile.sprite.setTextureRect({w * 6, h * 4, w, h});
+        break;
+    case Tile::Type::WALLS_TOP_LEFT_BOTTOM_RIGHT_CORNER_TL_BL_TR_BR:
+        tile.sprite.setTextureRect({w * 6, h * 2, w, h});
+        break;
+    case Tile::Type::WALLS_TOP_LEFT_RIGHT_CORNER_TL_TR:
+        tile.sprite.setTextureRect({w * 3, h * 5, w, h});
         break;
 
     case Tile::Type::WALL_TOP_BOTTOM:
