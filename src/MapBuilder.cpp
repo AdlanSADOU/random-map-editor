@@ -1,13 +1,13 @@
 #include "MapBuilder.hpp"
 #include <vector>
 
-sf::RenderTexture gridRenderTexture;
-std::vector<sf::RectangleShape> grid;
+sf::RenderTexture                 gridRenderTexture;
+std::vector<sf::RectangleShape>   grid;
 std::vector<sf::RectangleShape *> currentSelectedGridSquares;
 
 std::vector<sf::IntRect> tileRects;
-sf::Texture tileTexture;
-sf::Sprite tileSprite;
+sf::Texture              tileTexture;
+sf::Sprite               tileSprite;
 
 /**
  * a spriteSheet should:
@@ -19,21 +19,21 @@ sf::Sprite tileSprite;
  * If our spriteSheet is just a sprite whose tiles are just rects
  */
 struct SpriteSheet {
-    sf::Sprite sprite;
+    sf::Sprite  sprite;
     sf::Texture texture;
-    sf::Image image;
+    sf::Image   image;
 
     std::vector<sf::IntRect> rects;
     std::vector<sf::Texture> textures;
 
     sf::Vector2i _textureSize = {};
-    sf::Vector2i _tileSize = {};
-    std::string fileName;
+    sf::Vector2i _tileSize    = {};
+    std::string  fileName;
 
     void create(std::string fileName, sf::Vector2i tileSize)
     {
         this->_tileSize = tileSize;
-        this->fileName = fileName;
+        this->fileName  = fileName;
 
         if (!this->texture.loadFromFile(fileName))
             return;
@@ -57,9 +57,9 @@ struct SpriteSheet {
                 tmpRect = {x, y, this->_tileSize.x, this->_tileSize.y};
                 this->rects.push_back(tmpRect);
 
-                sf::Texture tmpTexture;
+                sf::Texture  tmpTexture;
                 sf::Vector2u dimensions = this->image.getSize();
-                size_t size = dimensions.x * dimensions.y * 4;
+                size_t       size       = dimensions.x * dimensions.y * 4;
                 tmpTexture.loadFromImage(this->image, tmpRect);
                 this->textures.push_back(tmpTexture);
             }
@@ -71,6 +71,7 @@ static std::vector<SpriteSheet> spriteSheets;
 
 std::string tileTypes[]{
     {"GROUND"},
+    {"GROUND_LOOP"},
     {"TOP"},
     {"LEFT"},
     {"BOTTOM"},
@@ -110,11 +111,52 @@ std::string tileTypes[]{
     {"WALL_BOTTOM_LEFT_CORNER"},
     {"WALL_TOP_RIGHT_CORNER"},
     {"WALL_TOP_LEFT_CORNER"},
-    {"WALL_LOOP"}};
+    {"WALL_LOOP"},
+    {"EDGE_LR"},
+    {"EDGE_TB"},
+    {"EDGE_WT_GL"},
+    {"EDGE_WT_GL1"},
+    {"EDGE_WT_GL2"},
+    {"EDGE_WT_GL3"},
+    {"EDGE_WT_GL4"},
+    {"EDGE_WT_GL5"},
+    {"EDGE_WT_GL6"},
+    {"EDGE_WT_GL7"},
+    {"EDGE_WT_GL8"},
+    {"EDGE_WT_GL9"},
+    {"EDGE_WT_GL10"},
+    {"EDGE_WT_GL11"},
+    {"EDGE_WT_GL12"},
+    {"EDGE_WT_GL13"},
+    {"EDGE_WT_GL14"},
+    {"EDGE_WT_GL15"},
+    {"EDGE_WT_GL16"},
+    {"EDGE_WT_GL17"},
+    {"EDGE_WT_GL18"},
+    {"EDGE_WT_GL19"},
+    {"EDGE_WT_GL20"},
+    {"EDGE_WT_GL21"},
+    {"EDGE_WT_GL22"},
+    {"EDGE_WT_GL23"},
+    {"EDGE_WT_GL24"},
+    {"EDGE_WT_GL25"},
+    {"EDGE_WT_GL26"},
+    {"EDGE_WT_GL27"},
+    {"EDGE_WT_GL28"},
+    {"EDGE_WT_GL29"},
+    {"EDGE_WT_GL30"},
+    {"EDGE_WT_GL31"},
+    {"EDGE_WT_GL32"},
+    {"EDGE_WT_GL33"},
+    {"EDGE_WT_GL34"},
+    {"EDGE_WT_GL35"},
+    {"EDGE_WT_GL36"},
+    {"EDGE_ALL"},
+    };
 
 void InitMapBuilder(sf::RenderWindow &window, Map &map)
 {
-    float width = map.getGlobalBounds().width;
+    float width  = map.getGlobalBounds().width;
     float height = map.getGlobalBounds().height;
     gridRenderTexture.create(width, height);
 
@@ -137,9 +179,9 @@ void updateMapBuilder(sf::RenderWindow &window, Map &map)
 {
     ImGuiIO io = ImGui::GetIO();
 
-    sf::Vector2f mousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+    sf::Vector2f  mousePos        = window.mapPixelToCoords(sf::Mouse::getPosition(window));
     static size_t selectedTileIdx = -1;
-    static bool isSelection = false;
+    static bool   isSelection     = false;
 
     for (size_t gridIdx = 0; gridIdx < grid.size(); gridIdx++) {
         if (grid[gridIdx].getGlobalBounds().contains(mousePos)) {
@@ -147,10 +189,10 @@ void updateMapBuilder(sf::RenderWindow &window, Map &map)
 
             if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && !io.WantCaptureMouse) {
                 if (currentSelectedGridSquares.size() > 0)
-                    currentSelectedGridSquares.clear();
+                    currentSelectedGridSquares.clear(); // TODO: we should also clear when the map gets regenerated @Map::generate
 
                 selectedTileIdx = gridIdx;
-                isSelection = true;
+                isSelection     = true;
 
                 Map::Tile selection = map.mapTiles[gridIdx];
                 for (int mapIdx = 0; mapIdx < map.mapTiles.size(); mapIdx++) {
@@ -187,8 +229,8 @@ void updateMapBuilder(sf::RenderWindow &window, Map &map)
             /**
              * display all loaded sprite sheets
              */
-            static bool p_open;
-            static int clickedIndex = -1;
+            static bool             p_open;
+            static int              clickedIndex = -1;
             static ImGuiWindowFlags builder_flags;
             builder_flags |= ImGuiWindowFlags_Modal;
             builder_flags |= ImGuiWindowFlags_MenuBar;
@@ -215,15 +257,16 @@ void updateMapBuilder(sf::RenderWindow &window, Map &map)
                 for (size_t i = 0; i < spriteSheets[k].textures.size(); i++) {
                     // tileSprite.setTextureRect(spriteSheets[k].textures[i]);
 
-                    static int x = (spriteSheets[k]._textureSize.x / spriteSheets[k]._tileSize.x);
+                    int x = (spriteSheets[k]._textureSize.x / spriteSheets[k]._tileSize.x);
                     if (i % x) {
                         ImGui::SameLine();
-                    } else if (i > 0) y++;
+                    } else if (i > 0)
+                        y++;
 
                     ImGui::ImageButton((spriteSheets[k].textures[i]), {40, 40}, 1, sf::Color(30, 30, 30));
 
                     if (ImGui::IsItemClicked()) {
-                        clickedIndex = i;
+                        clickedIndex         = i;
                         selectedTilePosition = {(int)i % x, (int)y};
 
                         Map::Tile selectedTile = map.mapTiles[selectedTileIdx];

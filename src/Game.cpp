@@ -12,6 +12,7 @@
 
 std::vector<std::string> fileNames;
 std::vector<sf::Texture> spriteSheetTextures;
+
 void loadDroppedImages();
 
 void run()
@@ -21,16 +22,16 @@ void run()
         window.setFramerateLimit(160);
         // window.setVerticalSyncEnabled(true);
 
-        map.create(window.getSize(), {40,40}, 4, 3, 3, 36);
+        map.create(window.getSize(), {40, 40}, 4, 3, 3, 36);
         map.render();
         InitMapBuilder(window, map);
 
         skeleton.create();
     }
 
-    sf::Vector2u windowSize = window.getSize();
-    sf::View renTexView = map.renderTexture.getView();
-    sf::View defaultView = window.getDefaultView();
+    sf::Vector2u windowSize  = window.getSize();
+    sf::View     defaultView = window.getDefaultView();
+    sf::View     renTexView  = map.renderTexture.getView();
     renTexView.zoom(zoom);
 
     sf::ContextSettings settings = window.getSettings();
@@ -44,15 +45,17 @@ void run()
 
     sf::Clock deltaClock;
     sf::Clock clock;
+
     sf::Time previousTime = clock.getElapsedTime();
     sf::Time currentTime;
     sf::Time t_deltaTime;
 
-    HWND hwnd = window.getSystemHandle();
+    HWND         hwnd       = window.getSystemHandle();
     LPDROPTARGET dropTarget = NULL;
-    RegisterDragDrop(hwnd, dropTarget);
 
+    RegisterDragDrop(hwnd, dropTarget);
     DragAcceptFiles(hwnd, TRUE);
+
     MSG msg;
     msg.message = static_cast<UINT>(~WM_QUIT);
 
@@ -72,22 +75,22 @@ void run()
 
                     // MessageBox(hwnd, "some text", "idk", MB_OK | MB_RETRYCANCEL);
 
-                    HDROP drop = (HDROP)msg.wParam;
-                    UINT filePathesCount = DragQueryFileW(drop, 0xFFFFFFFF, NULL, 512); //If "0xFFFFFFFF" as the second parameter: return the count of files dropped
-                    wchar_t *fileName = NULL;
-                    UINT longestFileNameLength = 0;
+                    HDROP    drop                  = (HDROP)msg.wParam;
+                    UINT     filePathesCount       = DragQueryFileW(drop, 0xFFFFFFFF, NULL, 512); //If "0xFFFFFFFF" as the second parameter: return the count of files dropped
+                    wchar_t *fileName              = NULL;
+                    UINT     longestFileNameLength = 0;
                     for (UINT i = 0; i < filePathesCount; ++i) {
                         //If NULL as the third parameter: return the length of the path, not counting the trailing '0'
                         UINT fileNameLength = DragQueryFileW(drop, i, NULL, 512) + 1;
                         if (fileNameLength > longestFileNameLength) {
                             longestFileNameLength = fileNameLength;
-                            fileName = (wchar_t *)realloc(fileName, longestFileNameLength * sizeof(*fileName));
+                            fileName              = (wchar_t *)realloc(fileName, longestFileNameLength * sizeof(*fileName));
                         }
                         DragQueryFileW(drop, i, fileName, fileNameLength);
 
                         // std::wcout << fileName << std::endl;
 
-                        char *s = (char *)malloc(fileNameLength);
+                        char * s    = (char *)malloc(fileNameLength);
                         size_t size = std::wcstombs(s, fileName, fileNameLength);
                         if (size <= 0)
                             printf("something went wrong...! size: %zd\n", size);
@@ -120,7 +123,7 @@ void run()
 
         else {
             sf::Event e;
-            ImGuiIO io;
+            ImGuiIO   io;
             while (window.pollEvent(e)) {
                 ImGui::SFML::ProcessEvent(e);
                 sf::FloatRect fRect = {0, 0, (float)e.size.width, (float)e.size.height};
@@ -186,11 +189,11 @@ void run()
             window.display();
 
             {
-                t_deltaTime = deltaClock.getElapsedTime();
-                currentTime = clock.getElapsedTime();
-                fps = 1.0f / (currentTime.asSeconds() - previousTime.asSeconds());
+                t_deltaTime  = deltaClock.getElapsedTime();
+                currentTime  = clock.getElapsedTime();
+                fps          = 1.0f / (currentTime.asSeconds() - previousTime.asSeconds());
                 previousTime = currentTime;
-                deltaTime = 1.0f / fps * 100.0f;
+                deltaTime    = 1.0f / fps * 100.0f;
             }
         }
     }

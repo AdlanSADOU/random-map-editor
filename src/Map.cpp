@@ -1,13 +1,62 @@
+// else if (topWall && !leftWall && !rightWall)
+//     PushTile(pos, Tile::Type::WALL_TOP);
+// else if (leftWall && !wall_top_left && !bottomLeftWall && !topWall)
+//     PushTile(pos, Tile::Type::WALL_LEFT);
+// else if (bottomWall && !bottomLeftWall && !bottomRightWall)
+//     PushTile(pos, Tile::Type::WALL_BOTTOM);
+// else if (rightWall && !topRightWall && !bottomRightWall)
+//     PushTile(pos, Tile::Type::WALL_RIGHT);
+
+// else if (wall_top_bottom && !leftWall && !rightWall)
+//     PushTile(pos, Tile::Type::WALL_TOP_BOTTOM);
+// else if (wall_left_right && !topWall && !leftWall)
+//     PushTile(pos, Tile::Type::WALL_LEFT_RIGHT);
+
+// else if (wall_top_left && !topRightWall)
+//     PushTile(pos, Tile::Type::WALL_TOP_LEFT);
+// else if (topRightWall && !wall_top_left)
+//     PushTile(pos, Tile::Type::WALL_TOP_RIGHT);
+// else if (bottomLeftWall && !bottomRightWall)
+//     PushTile(pos, Tile::Type::WALL_BOTTOM_LEFT);
+// else if (bottomRightWall && !bottomLeftWall && !walls_right_top_bottom)
+//     PushTile(pos, Tile::Type::WALL_BOTTOM_RIGHT);
+
+// if (ground && bottom)
+//     PushTile({(x * 32.f), ((y + 1) * 32.f)}, Tile::Type::OUTER);
+
+// if (ground && top) {
+//     PushTile({((x)*32.f), ((y - 1) * 32.f)}, Tile::Type::WALL);
+// }
+// if (ground && left) {
+//     PushTile({((x - 1) * 32.f), (y * 32.f)}, Tile::Type::WALL);
+// }
+// if (ground && bottom) {
+//     PushTile({((x)*32.f), ((y + 1) * 32.f)}, Tile::Type::WALL);
+// }
+// if (ground && right) {
+//     PushTile({((x + 1) * 32.f), (y * 32.f)}, Tile::Type::WALL);
+// }
+
+// if (leftWall) {
+//     PushTile({((x - 1) * 32.f), (y * 32.f)}, Tile::Type::WALL);
+// }
+// if (bottomWall) {
+//     PushTile({((x)*32.f), ((y + 1) * 32.f)}, Tile::Type::WALL);
+// }
+// if (rightWall) {
+//     PushTile({((x + 1) * 32.f), (y * 32.f)}, Tile::Type::WALL);
+// }
+
 #include "Map.hpp"
 
 bool **Map::create(sf::Vector2u windowSize, sf::Vector2i size, int birthLimit,
                    int deathLimit, int steps, int chanceToStartAlive)
 {
     this->_chanceToStartAlive = chanceToStartAlive;
-    this->_size = size;
-    this->_birthLimit = birthLimit;
-    this->_deathLimit = deathLimit;
-    this->_steps = steps;
+    this->_size               = size;
+    this->_birthLimit         = birthLimit;
+    this->_deathLimit         = deathLimit;
+    this->_steps              = steps;
 
     // TODO: hardcoded spritesheet paths
     floorsTileset.loadFromFile("./res/sprites/floors.png");
@@ -28,11 +77,10 @@ bool **Map::create(sf::Vector2u windowSize, sf::Vector2i size, int birthLimit,
 // TODO: add an additional layer?
 bool **Map::generate()
 {
-
     for (int x = 0; x < this->_size.x; x++)
         for (int y = 0; y < this->_size.y; y++) {
             if (x > 2 && y > 2 && this->_size.x > x + 3 && this->_size.y > y + 2) {
-                this->_map[x][y] = false;
+                this->_map[x][y]    = false;
                 this->_mapTmp[x][y] = false;
             }
         }
@@ -43,6 +91,7 @@ bool **Map::generate()
                 if ((rand() % 100) < this->_chanceToStartAlive)
                     this->_map[x][y] = true;
             }
+
     int i = 0;
     while ((i++) < this->_steps) {
         for (int x = 0; x < this->_size.x; x++) {
@@ -86,13 +135,23 @@ void Map::render()
 
     typedef Tile::Type tType;
 
-#define WALL(x, y) (m[x][y])
-#define GROUND(x, y) (!m[x][y])
+#define W(x, y) (m[x][y])  // looking for a wall
+#define G(x, y) (!m[x][y]) // looking for ground
 
-#define GROUND_TOP(x, y) (GROUND(x, y) && !GROUND(x, y - 1))
+#define G_TOP(x, y)   (G(x, y - 1))
+#define G_LEFT(x, y)  (G(x - 1, y))
+#define G_BOT(x, y)   (G(x, y + 1))
+#define G_RIGHT(x, y) (G(x + 1, y))
 
-#define WALL_TOP(x, y) (WALL(x, y) && m[x][y - 1])
-#define WALL_TOP(x, y) (WALL(x, y) && m[x][y - 1])
+#define W_TOP(x, y)   (W(x, y - 1))
+#define W_LEFT(x, y)  (W(x - 1, y))
+#define W_BOT(x, y)   (W(x, y + 1))
+#define W_RIGHT(x, y) (W(x + 1, y))
+
+#define G_TL_CORNER(x, y) (G(x - 1, y - 1))
+#define G_BL_CORNER(x, y) (G(x - 1, y + 1))
+#define G_BR_CORNER(x, y) (G(x + 1, y + 1))
+#define G_TR_CORNER(x, y) (G(x + 1, y - 1))
 
     auto m = this->_map;
     for (size_t x = 0; x < this->_size.x; x++) {
@@ -104,56 +163,354 @@ void Map::render()
                 continue;
 
             bool ground = !m[x][y];
-            bool outer = m[x][y];
-
-            bool top = (ground && m[x][y - 1]);
-            bool left = (ground && m[x - 1][y]);
-            bool right = (ground && m[x + 1][y]);
+            bool outer  = m[x][y];
+            bool top    = (ground && m[x][y - 1]); // cell is standing on a ground tile and has a wall above it
+            bool left   = (ground && m[x - 1][y]);
+            bool right  = (ground && m[x + 1][y]);
             bool bottom = (ground && m[x][y + 1]);
 
-            bool corner_top_left = ((top && left) && (!bottom && !right));
-            bool corner_top_right = ((top && right) && (!bottom && !left));
-            bool corner_bottom_left = ((bottom && left) && (!top && !right));
+            bool corner_top_left     = ((top && left) && (!bottom && !right));
+            bool corner_top_right    = ((top && right) && (!bottom && !left));
+            bool corner_bottom_left  = ((bottom && left) && (!top && !right));
             bool corner_bottom_right = ((bottom && right) && (!top && !left));
 
-            bool corners_top_left_right = (top && left && right && !bottom);
-            bool corners_left_top_bottom = (left && top && bottom && !right);
-            bool corners_right_top_bottom = (right && top && bottom && !left);
+            bool corners_top_left_right    = (top && left && right && !bottom);
+            bool corners_left_top_bottom   = (left && top && bottom && !right);
+            bool corners_right_top_bottom  = (right && top && bottom && !left);
             bool corners_bottom_left_right = (bottom && left && right && !top);
-            bool allCorners = (left && top && bottom && right);
+            bool allCorners                = (left && top && bottom && right);
 
-            bool wall_top = (outer && !m[x][y - 1]);
-            bool wall_left = (outer && !m[x - 1][y]);
-            bool wall_right = (outer && !m[x + 1][y]);
+            bool wall_top    = (outer && !m[x][y - 1]);
+            bool wall_left   = (outer && !m[x - 1][y]);
+            bool wall_right  = (outer && !m[x + 1][y]);
             bool wall_bottom = (outer && !m[x][y + 1]);
 
-            bool wall_top_left = (wall_top && wall_left && !wall_right && !wall_bottom);
-            bool wall_top_right = (wall_top && wall_right && !wall_left && !wall_bottom);
-            bool wall_bottom_left = (wall_bottom && wall_left && !wall_top && !wall_right);
+            bool wall_top_left     = (wall_top && wall_left && !wall_right && !wall_bottom);
+            bool wall_top_right    = (wall_top && wall_right && !wall_left && !wall_bottom);
+            bool wall_bottom_left  = (wall_bottom && wall_left && !wall_top && !wall_right);
             bool wall_bottom_right = (wall_bottom && wall_right && !wall_left && !wall_top);
 
-            bool wall_top_bottom = (outer && (WALL(x - 1, y) && WALL(x + 1, y)) && (!WALL(x, y + 1) && !WALL(x, y - 1)));
+            bool wall_top_bottom = (outer && (W(x - 1, y) && W(x + 1, y)) && (!W(x, y + 1) && !W(x, y - 1)));
             bool wall_left_right = (left && right);
 
-            bool walls_top_left_right = (wall_top && wall_left && wall_right && !wall_bottom);
-            bool walls_left_top_bottom = (wall_left && wall_top && wall_bottom && !wall_right);
-            bool walls_right_top_bottom = (wall_right && wall_top && wall_bottom && !wall_left);
+            bool walls_top_left_right    = (wall_top && wall_left && wall_right && !wall_bottom);
+            bool walls_left_top_bottom   = (wall_left && wall_top && wall_bottom && !wall_right);
+            bool walls_right_top_bottom  = (wall_right && wall_top && wall_bottom && !wall_left);
             bool walls_bottom_left_right = (wall_bottom && wall_left && wall_right && !wall_top);
-            bool wall_loop = (wall_left && wall_top && wall_bottom && wall_right);
+            bool wall_loop               = (wall_left && wall_top && wall_bottom && wall_right);
 
-            // TODO: we should rethink these corner cases, we have poor naming convention right now
-            // bool walls_top_left_corner_tl = (!wall_top && !wall_left && wall_bottom && wall_right) && (GROUND(x - 1, y - 1) && !GROUND(x - 1, y + 1));
-            // bool walls_top_left_bottom_corner_tl_bl = (!wall_top && !wall_left && !wall_bottom && wall_right) && (GROUND(x - 1, y - 1) && GROUND(x - 1, y + 1) && !GROUND(x + 1, y - 1));
-            // bool walls_top_left_bottom_right_corner_tl_bl_tr = (!wall_top && !wall_left && !wall_bottom && !wall_right) && (GROUND(x - 1, y - 1) && GROUND(x - 1, y + 1) && GROUND(x + 1, y - 1));
-            // bool walls_top_left_bottom_right_corner_tl_bl_tr_br = (!wall_top && !wall_left && !wall_bottom && !wall_right) && (GROUND(x - 1, y - 1) && GROUND(x - 1, y + 1) && GROUND(x + 1, y - 1));
-            // // bool walls_left_corner_tr = (!wall_left && (GROUND(x, y-1)  && GROUND(x, y+1) && !GROUND(x)))
-            // bool walls_top_left_right_corner_tl_tr = (!wall_top && !wall_left && !wall_right && (GROUND(x-1, y-1) && GROUND(x+1, y-1)));
+            bool edge_wt_gl = outer &&
+                              G_TL_CORNER(x, y) && G_TR_CORNER(x, y) && !G_BR_CORNER(x, y) && G_BL_CORNER(x, y) &&
+                              W_TOP(x, y) && W_LEFT(x, y) && W_BOT(x, y) && W_RIGHT(x, y);
+            bool edge_wt_gl1 = outer &&
+                               G_TL_CORNER(x, y) && !G_TR_CORNER(x, y) && !G_BR_CORNER(x, y) && G_BL_CORNER(x, y) &&
+                               W_TOP(x, y) && W_LEFT(x, y) && W_BOT(x, y) && W_RIGHT(x, y);
+            bool edge_wt_gl2 = outer &&
+                               G_TL_CORNER(x, y) && G_TR_CORNER(x, y) && !G_BR_CORNER(x, y) && !G_BL_CORNER(x, y) &&
+                               W_TOP(x, y) && W_LEFT(x, y) && W_BOT(x, y) && W_RIGHT(x, y);
+            bool edge_wt_gl3 = outer &&
+                               !G_TL_CORNER(x, y) && !G_TR_CORNER(x, y) && G_BR_CORNER(x, y) && G_BL_CORNER(x, y) &&
+                               W_TOP(x, y) && W_LEFT(x, y) && W_BOT(x, y) && W_RIGHT(x, y);
+            bool edge_wt_gl4 = outer &&
+                               !G_TL_CORNER(x, y) && !G_TR_CORNER(x, y) && G_BR_CORNER(x, y) && !G_BL_CORNER(x, y) &&
+                               W_TOP(x, y) && W_LEFT(x, y) && W_BOT(x, y) && W_RIGHT(x, y);
+            bool edge_wt_gl5 = outer &&
+                               !G_TL_CORNER(x, y) && !G_TR_CORNER(x, y) && !G_BR_CORNER(x, y) && G_BL_CORNER(x, y) &&
+                               W_TOP(x, y) && W_LEFT(x, y) && W_BOT(x, y) && W_RIGHT(x, y);
+            bool edge_wt_gl6 = outer &&
+                               G_TL_CORNER(x, y) && !G_TR_CORNER(x, y) && !G_BR_CORNER(x, y) && !G_BL_CORNER(x, y) &&
+                               W_TOP(x, y) && W_LEFT(x, y) && W_BOT(x, y) && W_RIGHT(x, y);
+            bool edge_wt_gl7 = outer &&
+                               !G_TL_CORNER(x, y) && G_TR_CORNER(x, y) && !G_BR_CORNER(x, y) && !G_BL_CORNER(x, y) &&
+                               W_TOP(x, y) && W_LEFT(x, y) && W_BOT(x, y) && W_RIGHT(x, y);
+            bool edge_wt_gl8 = outer &&
+                               !G_TL_CORNER(x, y) &&
+                               G_TR_CORNER(x, y) &&
+                            //    G_BR_CORNER(x, y) &&
+                            //    G_BL_CORNER(x, y) &&
+
+                               W_TOP(x, y) && W_LEFT(x, y) && !W_BOT(x, y) && W_RIGHT(x, y);
+
+            bool edge_wt_gl9 = outer &&
+                               !G_TL_CORNER(x, y) && !G_TR_CORNER(x, y) && G_BR_CORNER(x, y) && (!G_BL_CORNER(x, y) || G_BL_CORNER(x, y)) &&
+                               W_TOP(x, y) && !W_LEFT(x, y) && W_BOT(x, y) && W_RIGHT(x, y);
+            // bool edge_wt_gl10 = outer &&
+            //                   !G_TL_CORNER(x, y) && !G_TR_CORNER(x, y) && !G_BR_CORNER(x, y) && !G_BL_CORNER(x, y) &&
+            //                   W_TOP(x, y) && W_LEFT(x, y) && W_BOT(x, y) && !W_RIGHT(x, y);
+            bool edge_wt_gl11 = outer &&
+                                // G_TL_CORNER(x, y) &&
+                                !G_TR_CORNER(x, y) &&
+                                G_BR_CORNER(x, y) &&
+                                // G_BL_CORNER(x, y) &&
+                                W_TOP(x, y) && !W_LEFT(x, y) &&
+                                W_BOT(x, y) && W_RIGHT(x, y);
+
+            // bool edge_wt_gl12 = outer &&
+            //                     // G_TL_CORNER(x, y) &
+            //                     !G_TR_CORNER(x, y) &&
+            //                     !G_BR_CORNER(x, y) &&
+            //                     // !G_BL_CORNER(x, y) &&
+            //                     W_TOP(x, y) && !W_LEFT(x, y) && W_BOT(x, y) && W_RIGHT(x, y);
+
+            bool edge_wt_gl13 = outer &&
+                                !G_TL_CORNER(x, y) && G_TR_CORNER(x, y) && G_BR_CORNER(x, y) && !G_BL_CORNER(x, y) &&
+                                W_TOP(x, y) && W_LEFT(x, y) && W_BOT(x, y) && W_RIGHT(x, y);
+
+            // bool edge_wt_gl14 = outer &&
+            //                     G_TL_CORNER(x, y) && G_TR_CORNER(x, y) && G_BR_CORNER(x, y) && !G_BL_CORNER(x, y) &&
+            //                     !W_TOP(x, y) && !W_LEFT(x, y) && W_BOT(x, y) && W_RIGHT(x, y);
+
+            bool edge_wt_gl15 = outer &&
+                                G_TL_CORNER(x, y) && !G_TR_CORNER(x, y) && G_BR_CORNER(x, y) && !G_BL_CORNER(x, y) &&
+                                W_TOP(x, y) && W_LEFT(x, y) && W_BOT(x, y) && W_RIGHT(x, y);
+
+            bool edge_wt_gl16 = outer && // TODO: seems like we got a prob on this one
+                                G_TL_CORNER(x, y) &&
+                                !G_TR_CORNER(x, y) &&
+                                !G_BR_CORNER(x, y) &&
+                                G_BL_CORNER(x, y) &&
+
+                                W_TOP(x, y) &&
+                                W_LEFT(x, y) &&
+                                !W_BOT(x, y) &&
+                                !W_RIGHT(x, y);
+
+            bool edge_wt_gl17 = outer &&
+                                // !G_TL_CORNER(x, y) && // *Note: do we really not care?
+                                // !G_TR_CORNER(x, y) &&
+                                !G_BR_CORNER(x, y) &&
+                                G_BL_CORNER(x, y) &&
+
+                                !W_TOP(x, y) &&
+                                W_LEFT(x, y) &&
+                                W_BOT(x, y) &&
+                                W_RIGHT(x, y);
+            bool edge_wt_gl32 = outer &&
+                                // !G_TL_CORNER(x, y) && // *Note: do we really not care?
+                                // !G_TR_CORNER(x, y) &&
+                                G_BR_CORNER(x, y) &&
+                                G_BL_CORNER(x, y) &&
+
+                                !W_TOP(x, y) &&
+                                W_LEFT(x, y) &&
+                                W_BOT(x, y) &&
+                                W_RIGHT(x, y);
+            bool edge_wt_gl18 = outer &&
+                                !G_TL_CORNER(x, y) &&
+                                G_TR_CORNER(x, y) &&
+                                !G_BR_CORNER(x, y) &&
+                                G_BL_CORNER(x, y) &&
+
+                                W_TOP(x, y) &&
+                                W_LEFT(x, y) &&
+                                W_BOT(x, y) &&
+                                W_RIGHT(x, y);
+
+            bool edge_wt_gl19 = outer &&
+                                G_TL_CORNER(x, y) &&
+                                // G_TR_CORNER(x, y) &&
+                                // !G_BR_CORNER(x, y) &&
+                                !G_BL_CORNER(x, y) &&
+
+                                W_TOP(x, y) &&
+                                W_LEFT(x, y) &&
+                                W_BOT(x, y) &&
+                                !W_RIGHT(x, y);
+            bool edge_wt_gl20 = outer &&
+                                !G_TL_CORNER(x, y) &&
+                                // G_TR_CORNER(x, y) &&
+                                // !G_BR_CORNER(x, y) &&
+                                G_BL_CORNER(x, y) &&
+
+                                W_TOP(x, y) &&
+                                W_LEFT(x, y) &&
+                                W_BOT(x, y) &&
+                                !W_RIGHT(x, y);
+
+            bool edge_wt_gl21 = outer &&
+                                G_TL_CORNER(x, y) &&
+                                // G_TR_CORNER(x, y) &&
+                                // !G_BR_CORNER(x, y) &&
+                                G_BL_CORNER(x, y) &&
+
+                                W_TOP(x, y) &&
+                                W_LEFT(x, y) &&
+                                W_BOT(x, y) &&
+                                !W_RIGHT(x, y);
+            bool edge_wt_gl22 = outer &&
+                                G_TL_CORNER(x, y) &&
+                                !G_TR_CORNER(x, y) &&
+                                // G_BR_CORNER(x, y) &&
+                                //G_BL_CORNER(x, y) &&
+
+                                W_TOP(x, y) &&
+                                W_LEFT(x, y) &&
+                                !W_BOT(x, y) &&
+                                W_RIGHT(x, y);
+
+            bool edge_wt_gl23 = outer &&
+                                !G_TL_CORNER(x, y) &&
+                                G_TR_CORNER(x, y) &&
+                                // G_BR_CORNER(x, y) &&
+                                //G_BL_CORNER(x, y) &&
+
+                                W_TOP(x, y) &&
+                                W_LEFT(x, y) &&
+                                !W_BOT(x, y) &&
+                                W_RIGHT(x, y);
+            bool edge_wt_gl30 = outer &&
+                                G_TL_CORNER(x, y) &&
+                                !G_TR_CORNER(x, y) &&
+                                // G_BR_CORNER(x, y) &&
+                                //G_BL_CORNER(x, y) &&
+
+                                W_TOP(x, y) &&
+                                W_LEFT(x, y) &&
+                                !W_BOT(x, y) &&
+                                W_RIGHT(x, y);
+
+            bool edge_wt_gl24 = outer &&
+                                // G_TL_CORNER(x, y) &&
+                                G_TR_CORNER(x, y) &&
+                                !G_BR_CORNER(x, y) &&
+                                //G_BL_CORNER(x, y) &&
+
+                                W_TOP(x, y) &&
+                                !W_LEFT(x, y) &&
+                                W_BOT(x, y) &&
+                                W_RIGHT(x, y);
+
+            bool edge_wt_gl25 = outer &&
+                                // G_TL_CORNER(x, y) &&
+                                //G_TR_CORNER(x, y) &&
+                                G_BR_CORNER(x, y) &&
+                                !G_BL_CORNER(x, y) &&
+
+                                !W_TOP(x, y) &&
+                                W_LEFT(x, y) &&
+                                W_BOT(x, y) &&
+                                W_RIGHT(x, y);
+
+            bool edge_wt_gl26 = outer &&
+                                // G_TL_CORNER(x, y) &&
+                                G_TR_CORNER(x, y) &&
+                                G_BR_CORNER(x, y) &&
+                                // !G_BL_CORNER(x, y) &&
+
+                                W_TOP(x, y) &&
+                                !W_LEFT(x, y) &&
+                                W_BOT(x, y) &&
+                                W_RIGHT(x, y);
+
+            bool edge_wt_gl27 = outer &&
+                                !G_TL_CORNER(x, y) &&
+                                G_TR_CORNER(x, y) &&
+                                G_BR_CORNER(x, y) &&
+                                G_BL_CORNER(x, y) &&
+
+                                W_TOP(x, y) &&
+                                W_LEFT(x, y) &&
+                                W_BOT(x, y) &&
+                                W_RIGHT(x, y);
+
+            bool edge_wt_gl28 = outer &&
+                                // !G_TL_CORNER(x, y) &&
+                                !G_TR_CORNER(x, y) &&
+                                G_BR_CORNER(x, y) &&
+                                // G_BL_CORNER(x, y) &&
+
+                                W_TOP(x, y) &&
+                                !W_LEFT(x, y) &&
+                                W_BOT(x, y) &&
+                                W_RIGHT(x, y);
+            bool edge_wt_gl29 = outer &&
+                                G_TL_CORNER(x, y) &&
+                                G_TR_CORNER(x, y) &&
+                                G_BR_CORNER(x, y) &&
+                                !G_BL_CORNER(x, y) &&
+
+                                W_TOP(x, y) &&
+                                W_LEFT(x, y) &&
+                                W_BOT(x, y) &&
+                                W_RIGHT(x, y);
+            bool edge_wt_gl31 = outer &&
+                                G_TL_CORNER(x, y) &&
+                                !G_TR_CORNER(x, y) &&
+                                G_BR_CORNER(x, y) &&
+                                G_BL_CORNER(x, y) &&
+
+                                W_TOP(x, y) &&
+                                W_LEFT(x, y) &&
+                                W_BOT(x, y) &&
+                                W_RIGHT(x, y);
+
+
+            bool edge_wt_gl33 = outer &&
+                                // G_TL_CORNER(x, y) &&
+                                G_TR_CORNER(x, y) &&
+                                // G_BR_CORNER(x, y) &&
+                                // G_BL_CORNER(x, y) &&
+
+                                W_TOP(x, y) &&
+                                !W_LEFT(x, y) &&
+                                !W_BOT(x, y) &&
+                                W_RIGHT(x, y);
+            bool edge_wt_gl34 = outer &&
+                                G_TL_CORNER(x, y) &&
+                                // !G_TR_CORNER(x, y) &&
+                                // !G_BR_CORNER(x, y) &&
+                                // !G_BL_CORNER(x, y) &&
+
+                                W_TOP(x, y) &&
+                                W_LEFT(x, y) &&
+                                !W_BOT(x, y) &&
+                                !W_RIGHT(x, y);
+            bool edge_wt_gl35 = outer &&
+                                // !G_TL_CORNER(x, y) &&
+                                // !G_TR_CORNER(x, y) &&
+                                G_BR_CORNER(x, y) &&
+                                // !G_BL_CORNER(x, y) &&
+
+                                !W_TOP(x, y) &&
+                                !W_LEFT(x, y) &&
+                                W_BOT(x, y) &&
+                                W_RIGHT(x, y);
+            bool edge_wt_gl36 = outer &&
+                                // !G_TL_CORNER(x, y) &&
+                                // !G_TR_CORNER(x, y) &&
+                                // !G_BR_CORNER(x, y) &&
+                                G_BL_CORNER(x, y) &&
+
+                                !W_TOP(x, y) &&
+                                W_LEFT(x, y) &&
+                                W_BOT(x, y) &&
+                                !W_RIGHT(x, y);
+            bool edge_all = outer &&
+                                G_TL_CORNER(x, y) &&
+                                G_TR_CORNER(x, y) &&
+                                G_BR_CORNER(x, y) &&
+                                G_BL_CORNER(x, y) &&
+
+                                W_TOP(x, y) &&
+                                W_LEFT(x, y) &&
+                                W_BOT(x, y) &&
+                                W_RIGHT(x, y);
+
+            bool edge_lr = outer &&
+                           W_TOP(x, y) &&
+                           !W_LEFT(x, y) &&
+                           !W_RIGHT(x, y) &&
+                           W_BOT(x, y);
+
+            bool edge_tb = outer &&
+                           !W_TOP(x, y) && W_LEFT(x, y) &&
+                           !W_BOT(x, y) && W_RIGHT(x, y);
 
             sf::Vector2f pos = {(x * 32.f), (y * 32.f)};
 
             if (ground && !top && !left && !right && !bottom) //ok
                 PushTile(pos, Tile::Type::GROUND);
-            else if (top && !left && !right && !bottom) //ok
+            if (top && !left && !right && !bottom) //ok
                 PushTile(pos, Tile::Type::TOP);
             else if (left && !right && !top && !bottom) //ok
                 PushTile(pos, Tile::Type::LEFT);
@@ -162,7 +519,9 @@ void Map::render()
             else if (right && !left && !top && !bottom) //ok
                 PushTile(pos, Tile::Type::RIGHT);
 
-            else if (corner_top_left) //ok
+            // TODO: these are not actually wall corners, but inner ground corners, so, we should rename these
+            // INNER GROUND CORNERS
+            if (corner_top_left) //ok
                 PushTile(pos, Tile::Type::TOP_LEFT);
             else if (corner_top_right) //ok
                 PushTile(pos, Tile::Type::TOP_RIGHT);
@@ -170,11 +529,6 @@ void Map::render()
                 PushTile(pos, Tile::Type::BOTTOM_LEFT);
             else if (corner_bottom_right) //ok
                 PushTile(pos, Tile::Type::BOTTOM_RIGHT);
-
-            else if (left && right && (!top && !bottom)) //ok
-                PushTile(pos, Tile::Type::LEFT_RIGHT);
-            else if (top && bottom && (!left && !right)) //ok
-                PushTile(pos, Tile::Type::TOP_BOTTOM);
 
             else if (corners_top_left_right) //ok
                 PushTile(pos, Tile::Type::TOP_LEFT_RIGHT);
@@ -184,6 +538,95 @@ void Map::render()
                 PushTile(pos, Tile::Type::BOTTOM_LEFT_RIGHT);
             else if (corners_right_top_bottom) //ok
                 PushTile(pos, Tile::Type::RIGHT_TOP_BOTTOM);
+
+            else if (left && right && (!top && !bottom)) //ok
+                PushTile(pos, Tile::Type::LEFT_RIGHT);
+            else if (top && bottom && (!left && !right)) //ok
+                PushTile(pos, Tile::Type::TOP_BOTTOM);
+
+            // WALL EDGES
+            else if (edge_lr)
+                PushTile(pos, Tile::Type::EDGE_LR); // TODO: these are actually top bot / left right walls
+            else if (edge_tb)
+                PushTile(pos, Tile::Type::EDGE_TB);
+
+            else if (edge_wt_gl)
+                PushTile(pos, Tile::Type::EDGE_WT_GL);
+            else if (edge_wt_gl1)
+                PushTile(pos, Tile::Type::EDGE_WT_GL1);
+            else if (edge_wt_gl2)
+                PushTile(pos, Tile::Type::EDGE_WT_GL2);
+            else if (edge_wt_gl3)
+                PushTile(pos, Tile::Type::EDGE_WT_GL3);
+            else if (edge_wt_gl4)
+                PushTile(pos, Tile::Type::EDGE_WT_GL4);
+            else if (edge_wt_gl5)
+                PushTile(pos, Tile::Type::EDGE_WT_GL5);
+            else if (edge_wt_gl6)
+                PushTile(pos, Tile::Type::EDGE_WT_GL6);
+            else if (edge_wt_gl7)
+                PushTile(pos, Tile::Type::EDGE_WT_GL7);
+            else if (edge_wt_gl8)
+                PushTile(pos, Tile::Type::EDGE_WT_GL8);
+            else if (edge_wt_gl9)
+                PushTile(pos, Tile::Type::EDGE_WT_GL9);
+            // else if (edge_wt_gl10)
+            //     PushTile(pos, Tile::Type::EDGE_WT_GL10);
+            else if (edge_wt_gl11)
+                PushTile(pos, Tile::Type::EDGE_WT_GL11);
+            // else if (edge_wt_gl12)
+            //     PushTile(pos, Tile::Type::EDGE_WT_GL12);
+            else if (edge_wt_gl13)
+                PushTile(pos, Tile::Type::EDGE_WT_GL13);
+            // else if (edge_wt_gl14)
+            //     PushTile(pos, Tile::Type::EDGE_WT_GL14);
+            else if (edge_wt_gl15)
+                PushTile(pos, Tile::Type::EDGE_WT_GL15);
+            else if (edge_wt_gl16)
+                PushTile(pos, Tile::Type::EDGE_WT_GL16);
+            else if (edge_wt_gl17)
+                PushTile(pos, Tile::Type::EDGE_WT_GL17);
+            else if (edge_wt_gl18)
+                PushTile(pos, Tile::Type::EDGE_WT_GL18);
+            else if (edge_wt_gl19)
+                PushTile(pos, Tile::Type::EDGE_WT_GL19);
+            else if (edge_wt_gl20)
+                PushTile(pos, Tile::Type::EDGE_WT_GL20);
+            else if (edge_wt_gl21)
+                PushTile(pos, Tile::Type::EDGE_WT_GL21);
+            else if (edge_wt_gl22)
+                PushTile(pos, Tile::Type::EDGE_WT_GL22);
+            else if (edge_wt_gl23)
+                PushTile(pos, Tile::Type::EDGE_WT_GL23);
+            else if (edge_wt_gl24)
+                PushTile(pos, Tile::Type::EDGE_WT_GL24);
+            else if (edge_wt_gl25)
+                PushTile(pos, Tile::Type::EDGE_WT_GL25);
+            else if (edge_wt_gl26)
+                PushTile(pos, Tile::Type::EDGE_WT_GL26);
+            else if (edge_wt_gl27)
+                PushTile(pos, Tile::Type::EDGE_WT_GL27);
+            else if (edge_wt_gl28)
+                PushTile(pos, Tile::Type::EDGE_WT_GL28);
+            else if (edge_wt_gl29)
+                PushTile(pos, Tile::Type::EDGE_WT_GL29);
+            else if (edge_wt_gl30)
+                PushTile(pos, Tile::Type::EDGE_WT_GL30);
+            else if (edge_wt_gl31)
+                PushTile(pos, Tile::Type::EDGE_WT_GL31);
+            else if (edge_wt_gl32)
+                PushTile(pos, Tile::Type::EDGE_WT_GL32);
+
+            else if (edge_wt_gl33)
+                PushTile(pos, Tile::Type::EDGE_WT_GL33);
+            else if (edge_wt_gl34)
+                PushTile(pos, Tile::Type::EDGE_WT_GL34);
+            else if (edge_wt_gl35)
+                PushTile(pos, Tile::Type::EDGE_WT_GL35);
+            else if (edge_wt_gl36)
+                PushTile(pos, Tile::Type::EDGE_WT_GL36);
+            else if (edge_all)
+                PushTile(pos, Tile::Type::EDGE_ALL);
 
             // WALLS
             else if (wall_top && !wall_left && !wall_right && !wall_bottom) //ok
@@ -216,78 +659,15 @@ void Map::render()
             else if (walls_right_top_bottom)
                 PushTile(pos, Tile::Type::WALL_RIGHT_TOP_BOTTOM);
 
-            else if (walls_top_left_corner_tl)
-                PushTile(pos, Tile::Type::WALLS_TOP_LEFT_CORNER_TL);
-            else if (walls_top_left_bottom_corner_tl_bl)
-                PushTile(pos, Tile::Type::WALLS_TOP_LEFT_BOTTOM_CORNER_TL_BL);
-            else if (walls_top_left_bottom_right_corner_tl_bl_tr)
-                PushTile(pos, Tile::Type::WALLS_TOP_LEFT_BOTTOM_RIGHT_CORNER_TL_BL_TR);
-            else if (walls_top_left_bottom_right_corner_tl_bl_tr_br)
-                PushTile(pos, Tile::Type::WALLS_TOP_LEFT_BOTTOM_RIGHT_CORNER_TL_BL_TR_BR);
-            else if (walls_top_left_right_corner_tl_tr)
-                PushTile(pos, Tile::Type::WALLS_TOP_LEFT_RIGHT_CORNER_TL_TR);
-
-            // else if (WALL(x + 1, y) && WALL(x, y + 1) && !WALL(x + 1, y + 1) && !WALL(x - 1, y))
-            //     PushTile(pos, Tile::Type::WALL_BOTTOM_RIGHT_CORNER);
-            // else if (WALL(x - 1, y) && WALL(x, y + 1) && !WALL(x - 1, y + 1) && !WALL(x, y - 1))
-            //     PushTile(pos, Tile::Type::WALL_BOTTOM_LEFT_CORNER);
-
-            // else if (wall_loop)
-            //     PushTile(pos, Tile::Type::WALL_LOOP);
+            else if (wall_loop)
+                PushTile(pos, Tile::Type::WALL_LOOP);
+            else if (ground && top && left && right && bottom) //ok
+                PushTile(pos, Tile::Type::GROUND_LOOP);
             // END WALLs
 
-            // else if (topWall && !leftWall && !rightWall)
-            //     PushTile(pos, Tile::Type::WALL_TOP);
-            // else if (leftWall && !wall_top_left && !bottomLeftWall && !topWall)
-            //     PushTile(pos, Tile::Type::WALL_LEFT);
-            // else if (bottomWall && !bottomLeftWall && !bottomRightWall)
-            //     PushTile(pos, Tile::Type::WALL_BOTTOM);
-            // else if (rightWall && !topRightWall && !bottomRightWall)
-            //     PushTile(pos, Tile::Type::WALL_RIGHT);
-
-            // else if (wall_top_bottom && !leftWall && !rightWall)
-            //     PushTile(pos, Tile::Type::WALL_TOP_BOTTOM);
-            // else if (wall_left_right && !topWall && !leftWall)
-            //     PushTile(pos, Tile::Type::WALL_LEFT_RIGHT);
-
-            // else if (wall_top_left && !topRightWall)
-            //     PushTile(pos, Tile::Type::WALL_TOP_LEFT);
-            // else if (topRightWall && !wall_top_left)
-            //     PushTile(pos, Tile::Type::WALL_TOP_RIGHT);
-            // else if (bottomLeftWall && !bottomRightWall)
-            //     PushTile(pos, Tile::Type::WALL_BOTTOM_LEFT);
-            // else if (bottomRightWall && !bottomLeftWall && !walls_right_top_bottom)
-            //     PushTile(pos, Tile::Type::WALL_BOTTOM_RIGHT);
-
-            // if (ground && bottom)
-            //     PushTile({(x * 32.f), ((y + 1) * 32.f)}, Tile::Type::OUTER);
-
-            // if (ground && top) {
-            //     PushTile({((x)*32.f), ((y - 1) * 32.f)}, Tile::Type::WALL);
-            // }
-            // if (ground && left) {
-            //     PushTile({((x - 1) * 32.f), (y * 32.f)}, Tile::Type::WALL);
-            // }
-            // if (ground && bottom) {
-            //     PushTile({((x)*32.f), ((y + 1) * 32.f)}, Tile::Type::WALL);
-            // }
-            // if (ground && right) {
-            //     PushTile({((x + 1) * 32.f), (y * 32.f)}, Tile::Type::WALL);
-            // }
-
-            // if (leftWall) {
-            //     PushTile({((x - 1) * 32.f), (y * 32.f)}, Tile::Type::WALL);
-            // }
-            // if (bottomWall) {
-            //     PushTile({((x)*32.f), ((y + 1) * 32.f)}, Tile::Type::WALL);
-            // }
-            // if (rightWall) {
-            //     PushTile({((x + 1) * 32.f), (y * 32.f)}, Tile::Type::WALL);
-            // }
-
             // TODO: I don't know if we need to push these, we'll see eventually
-            // else if (outer)
-            //     PushTile(pos, Tile::Type::WALL);
+            else if (outer)
+                PushTile(pos, Tile::Type::WALL);
         }
 
         this->redraw();
@@ -347,6 +727,9 @@ void Map::PushTile(sf::Vector2f position, Tile::Type type)
         break;
     case Tile::Type::GROUND:
         tile.sprite.setTextureRect({w * 1, h * 0, w, h});
+        break;
+    case Tile::Type::GROUND_LOOP:
+        tile.sprite.setTextureRect({w * 1, h * 3, w, h});
         break;
 
     case Tile::Type::TOP:
@@ -448,17 +831,142 @@ void Map::PushTile(sf::Vector2f position, Tile::Type type)
     case Tile::Type::WALLS_TOP_LEFT_RIGHT_CORNER_TL_TR:
         tile.sprite.setTextureRect({w * 3, h * 5, w, h});
         break;
+    case Tile::Type::WALL_LOOP:
+        tile.sprite.setTextureRect({w * 7, h * 5, w, h});
+        break;
+
+    case Tile::Type::EDGE_TB:
+        tile.sprite.setTextureRect({w * 0, h * 1, w, h});
+        break;
+    case Tile::Type::EDGE_LR:
+        tile.sprite.setTextureRect({w * 6, h * 1, w, h});
+        break;
+    case Tile::Type::EDGE_WT_GL:
+        tile.sprite.setTextureRect({w * 6, h * 4, w, h});
+        break;
+    case Tile::Type::EDGE_WT_GL1:
+        tile.sprite.setTextureRect({w * 0, h * 5, w, h});
+        break;
+    case Tile::Type::EDGE_WT_GL2:
+        tile.sprite.setTextureRect({w * 3, h * 5, w, h});
+        break;
+    case Tile::Type::EDGE_WT_GL3:
+        tile.sprite.setTextureRect({w * 1, h * 3, w, h});
+        break;
+    case Tile::Type::EDGE_WT_GL4:
+        tile.sprite.setTextureRect({w * 1, h * 4, w, h});
+        break;
+    case Tile::Type::EDGE_WT_GL5:
+        tile.sprite.setTextureRect({w * 1, h * 5, w, h});
+        break;
+    case Tile::Type::EDGE_WT_GL6:
+        tile.sprite.setTextureRect({w * 5, h * 5, w, h});
+        break;
+    case Tile::Type::EDGE_WT_GL7:
+        tile.sprite.setTextureRect({w * 4, h * 5, w, h});
+        break;
+    case Tile::Type::EDGE_WT_GL8:
+        tile.sprite.setTextureRect({w * 2, h * 1, w, h});
+        break;
+    case Tile::Type::EDGE_WT_GL9:
+        tile.sprite.setTextureRect({w * 4, h * 2, w, h});
+        break;
+    case Tile::Type::EDGE_WT_GL10:
+        tile.sprite.setTextureRect({w * 1, h * 2, w, h});
+        break;
+    case Tile::Type::EDGE_WT_GL11:
+        tile.sprite.setTextureRect({w * 4, h * 2, w, h});
+        break;
+
+        //12
+
+    case Tile::Type::EDGE_WT_GL13:
+        tile.sprite.setTextureRect({w * 7, h * 3, w, h});
+        break;
+    case Tile::Type::EDGE_WT_GL14:
+        tile.sprite.setTextureRect({w * 2, h * 2, w, h});
+        break;
+    case Tile::Type::EDGE_WT_GL15:
+        tile.sprite.setTextureRect({w * 0, h * 4, w, h});
+        break;
+    case Tile::Type::EDGE_WT_GL16:
+        tile.sprite.setTextureRect({w * 3, h * 0, w, h});
+        break;
+    case Tile::Type::EDGE_WT_GL17:
+        tile.sprite.setTextureRect({w * 5, h * 4, w, h});
+        break;
+    case Tile::Type::EDGE_WT_GL18:
+        tile.sprite.setTextureRect({w * 7, h * 4, w, h});
+        break;
+    case Tile::Type::EDGE_WT_GL19:
+        tile.sprite.setTextureRect({w * 3, h * 3, w, h});
+        break;
+    case Tile::Type::EDGE_WT_GL20:
+        tile.sprite.setTextureRect({w * 1, h * 2, w, h});
+        break;
+    case Tile::Type::EDGE_WT_GL21:
+        tile.sprite.setTextureRect({w * 0, h * 2, w, h});
+        break;
+    case Tile::Type::EDGE_WT_GL22:
+        tile.sprite.setTextureRect({w * 3, h * 1, w, h});
+        break;
+    case Tile::Type::EDGE_WT_GL23:
+        tile.sprite.setTextureRect({w * 0, h * 2, w, h});
+        break;
+    case Tile::Type::EDGE_WT_GL24:
+        tile.sprite.setTextureRect({w * 3, h * 4, w, h});
+        break;
+    case Tile::Type::EDGE_WT_GL25:
+        tile.sprite.setTextureRect({w * 5, h * 3, w, h});
+        break;
+    case Tile::Type::EDGE_WT_GL26:
+        tile.sprite.setTextureRect({w * 3, h * 2, w, h});
+        break;
+    case Tile::Type::EDGE_WT_GL27:
+        tile.sprite.setTextureRect({w * 7, h * 2, w, h});
+        break;
+    case Tile::Type::EDGE_WT_GL28:
+        tile.sprite.setTextureRect({w * 7, h * 2, w, h});
+        break;
+    case Tile::Type::EDGE_WT_GL29:
+        tile.sprite.setTextureRect({w * 6, h * 3, w, h});
+        break;
+    case Tile::Type::EDGE_WT_GL30:
+        tile.sprite.setTextureRect({w * 6, h * 3, w, h});
+        break;
+    case Tile::Type::EDGE_WT_GL31:
+        tile.sprite.setTextureRect({w * 0, h * 3, w, h});
+        break;
+    case Tile::Type::EDGE_WT_GL32:
+        tile.sprite.setTextureRect({w * 5, h * 2, w, h});
+        break;
+
+    case Tile::Type::EDGE_WT_GL33:
+        tile.sprite.setTextureRect({w * 6, h * 0, w, h});
+        break;
+    case Tile::Type::EDGE_WT_GL34:
+        tile.sprite.setTextureRect({w * 3, h * 0, w, h});
+        break;
+    case Tile::Type::EDGE_WT_GL35:
+        tile.sprite.setTextureRect({w * 2, h * 2, w, h});
+        break;
+    case Tile::Type::EDGE_WT_GL36:
+        tile.sprite.setTextureRect({w * 7, h * 1, w, h});
+        break;
+    case Tile::Type::EDGE_ALL:
+        tile.sprite.setTextureRect({w * 6, h * 2, w, h});
+        break;
 
     case Tile::Type::WALL_TOP_BOTTOM:
         tile.sprite.setTextureRect({w * 0, h * 1, w, h});
         break;
     case Tile::Type::WALL_LEFT_RIGHT:
-        tile.sprite.setTextureRect({w * 6, h * 1, w, h});
+        tile.sprite.setTextureRect({w * 2, h * 1, w, h});
         break;
 
     case Tile::Type::WALL:
         tile.sprite.setTextureRect({w * 0, h * 0, w, h});
-        tile.sprite.setColor(sf::Color(40, 0, 0));
+        // tile.sprite.setColor(sf::Color(40, 0, 0));
         this->wallTiles.push_back(tile.sprite.getGlobalBounds());
         isWall = true;
         break;
