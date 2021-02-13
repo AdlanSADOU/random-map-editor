@@ -18,11 +18,11 @@ void loadDroppedImages();
 void run()
 {
     {
-        window.create(sf::VideoMode{1280, 720}, "Proto", sf::Style::Default);
+        window.create(sf::VideoMode{1280, 720}, "Map Builder", sf::Style::Default);
         window.setFramerateLimit(160);
         // window.setVerticalSyncEnabled(true);
 
-        map.create(window.getSize(), {40, 40}, 4, 3, 3, 36);
+        map.create(window.getSize(), {40, 30}, 4, 3, 3, 36);
         map.render();
         InitMapBuilder(window, map);
 
@@ -126,12 +126,18 @@ void run()
             ImGuiIO   io;
             while (window.pollEvent(e)) {
                 ImGui::SFML::ProcessEvent(e);
-                sf::FloatRect fRect = {0, 0, (float)e.size.width, (float)e.size.height};
+                sf::FloatRect fRect     = {0, 0, (float)e.size.width, (float)e.size.height};
+                static float  zoomDelta = 1;
 
                 switch (e.type) {
+                case sf::Event::MouseWheelScrolled:
+                    renTexView.zoom(zoomDelta += (0.03f * e.mouseWheelScroll.delta));
+                    printf("%f\n", zoomDelta);
+                    zoomDelta = 1;
+                    break;
                 case sf::Event::EventType::Resized:
                     renTexView.setSize({(float)e.size.width, (float)e.size.height});
-                    renTexView.zoom(zoom);
+                    // renTexView.zoom(zoom);
                     break;
                 case sf::Event::Closed:
                     // window.close();
@@ -157,13 +163,13 @@ void run()
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::K)) {
                 map.generate();
                 map.render();
-                renderMapBuilderGrid(window, map);
+
+                // renderMapBuilderGrid(window, map);
             }
 
             ImGui::SFML::Update(window, deltaClock.restart());
 
             renTexView.setCenter(skeleton.getPosition());
-
             window.setView(renTexView);
             window.clear(sf::Color(12, 12, 12, 255));
 
@@ -175,7 +181,7 @@ void run()
 
             { //* render()
                 window.draw(map);
-                renderMapBuilder(window);
+                //renderMapBuilder(window);
                 window.draw(skeleton);
             }
 
@@ -184,6 +190,7 @@ void run()
             ImGui::Text("fps: %.2f, %.2fms", fps, deltaTime);
             ImGui::End();
 
+            window.setView(defaultView);
             ImGui::SFML::Render(window);
 
             window.display();

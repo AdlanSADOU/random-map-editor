@@ -51,7 +51,7 @@ inline void Character::create()
     this->setTexture(this->texture);
     this->setTextureRect({0, 64 * 18, 64, 64});
     this->setScale({0.6f, 0.6f});
-
+    this->setPosition({500,500});
     Animation::AnimData walkUpAnimData{
         ._sprite = (this),
         ._texture = &(this->texture),
@@ -168,20 +168,20 @@ inline void Character::update(zz::Controls c, Map &map)
     rightPointPosU = {bounds.left + bounds.width - 8, bounds.top + bounds.height - 12};
     rightPointPosD = {bounds.left + bounds.width - 8, bounds.top + bounds.height - 4};
 
-    // for (auto &&w : map.wallTiles) {
-    //     if (w.contains(topPointPosL) ||
-    //         w.contains(topPointPosR))
-    //         upSpeed = zero;
-    //     if (w.contains(leftPointPosU) ||
-    //         w.contains(leftPointPosD))
-    //         leftSpeed = zero;
-    //     if (w.contains(downPointPosL) ||
-    //         w.contains(downPointPosR))
-    //         downSpeed = zero;
-    //     if (w.contains(rightPointPosU) ||
-    //         w.contains(rightPointPosD))
-    //         rightSpeed = zero;
-    // }
+    for (auto &&w : map.wallTiles) {
+        if (w.contains(topPointPosL) ||
+            w.contains(topPointPosR))
+            upSpeed = zero;
+        if (w.contains(leftPointPosU) ||
+            w.contains(leftPointPosD))
+            leftSpeed = zero;
+        if (w.contains(downPointPosL) ||
+            w.contains(downPointPosR))
+            downSpeed = zero;
+        if (w.contains(rightPointPosU) ||
+            w.contains(rightPointPosD))
+            rightSpeed = zero;
+    }
 
     animState = IDLE;
     if (c.up) {

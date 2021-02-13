@@ -1,51 +1,8 @@
-// else if (topWall && !leftWall && !rightWall)
-//     PushTile(pos, Tile::Type::WALL_TOP);
-// else if (leftWall && !wall_top_left && !bottomLeftWall && !topWall)
-//     PushTile(pos, Tile::Type::WALL_LEFT);
-// else if (bottomWall && !bottomLeftWall && !bottomRightWall)
-//     PushTile(pos, Tile::Type::WALL_BOTTOM);
-// else if (rightWall && !topRightWall && !bottomRightWall)
-//     PushTile(pos, Tile::Type::WALL_RIGHT);
-
-// else if (wall_top_bottom && !leftWall && !rightWall)
-//     PushTile(pos, Tile::Type::WALL_TOP_BOTTOM);
-// else if (wall_left_right && !topWall && !leftWall)
-//     PushTile(pos, Tile::Type::WALL_LEFT_RIGHT);
-
-// else if (wall_top_left && !topRightWall)
-//     PushTile(pos, Tile::Type::WALL_TOP_LEFT);
-// else if (topRightWall && !wall_top_left)
-//     PushTile(pos, Tile::Type::WALL_TOP_RIGHT);
-// else if (bottomLeftWall && !bottomRightWall)
-//     PushTile(pos, Tile::Type::WALL_BOTTOM_LEFT);
-// else if (bottomRightWall && !bottomLeftWall && !walls_right_top_bottom)
-//     PushTile(pos, Tile::Type::WALL_BOTTOM_RIGHT);
-
-// if (ground && bottom)
-//     PushTile({(x * 32.f), ((y + 1) * 32.f)}, Tile::Type::OUTER);
-
-// if (ground && top) {
-//     PushTile({((x)*32.f), ((y - 1) * 32.f)}, Tile::Type::WALL);
-// }
-// if (ground && left) {
-//     PushTile({((x - 1) * 32.f), (y * 32.f)}, Tile::Type::WALL);
-// }
-// if (ground && bottom) {
-//     PushTile({((x)*32.f), ((y + 1) * 32.f)}, Tile::Type::WALL);
-// }
-// if (ground && right) {
-//     PushTile({((x + 1) * 32.f), (y * 32.f)}, Tile::Type::WALL);
-// }
-
-// if (leftWall) {
-//     PushTile({((x - 1) * 32.f), (y * 32.f)}, Tile::Type::WALL);
-// }
-// if (bottomWall) {
-//     PushTile({((x)*32.f), ((y + 1) * 32.f)}, Tile::Type::WALL);
-// }
-// if (rightWall) {
-//     PushTile({((x + 1) * 32.f), (y * 32.f)}, Tile::Type::WALL);
-// }
+/**
+ * seems like we are done adding all tile types
+ * code should be cleaned up
+ * ask community if there is a standart way to name those tiles
+ */
 
 #include "Map.hpp"
 
@@ -117,7 +74,7 @@ bool **Map::generate()
         }
         this->_map = _mapTmp;
     }
-    this->printMap();
+    // this->printMap();
     puts("\n");
     return this->_map;
 }
@@ -226,8 +183,8 @@ void Map::render()
             bool edge_wt_gl8 = outer &&
                                !G_TL_CORNER(x, y) &&
                                G_TR_CORNER(x, y) &&
-                            //    G_BR_CORNER(x, y) &&
-                            //    G_BL_CORNER(x, y) &&
+                               //    G_BR_CORNER(x, y) &&
+                               //    G_BL_CORNER(x, y) &&
 
                                W_TOP(x, y) && W_LEFT(x, y) && !W_BOT(x, y) && W_RIGHT(x, y);
 
@@ -444,7 +401,6 @@ void Map::render()
                                 W_BOT(x, y) &&
                                 W_RIGHT(x, y);
 
-
             bool edge_wt_gl33 = outer &&
                                 // G_TL_CORNER(x, y) &&
                                 G_TR_CORNER(x, y) &&
@@ -486,15 +442,15 @@ void Map::render()
                                 W_BOT(x, y) &&
                                 !W_RIGHT(x, y);
             bool edge_all = outer &&
-                                G_TL_CORNER(x, y) &&
-                                G_TR_CORNER(x, y) &&
-                                G_BR_CORNER(x, y) &&
-                                G_BL_CORNER(x, y) &&
+                            G_TL_CORNER(x, y) &&
+                            G_TR_CORNER(x, y) &&
+                            G_BR_CORNER(x, y) &&
+                            G_BL_CORNER(x, y) &&
 
-                                W_TOP(x, y) &&
-                                W_LEFT(x, y) &&
-                                W_BOT(x, y) &&
-                                W_RIGHT(x, y);
+                            W_TOP(x, y) &&
+                            W_LEFT(x, y) &&
+                            W_BOT(x, y) &&
+                            W_RIGHT(x, y);
 
             bool edge_lr = outer &&
                            W_TOP(x, y) &&
@@ -694,7 +650,7 @@ void Map::printMap()
 {
     for (int i = 0; i < this->_size.x; i++) {
         for (int j = 0; j < this->_size.y; j++) {
-            std::cout << this->_map[i][j];
+            printf("%c", this->_map[i][j] + 'a');
         }
         std::cout << std::endl;
     }
@@ -878,8 +834,6 @@ void Map::PushTile(sf::Vector2f position, Tile::Type type)
         tile.sprite.setTextureRect({w * 4, h * 2, w, h});
         break;
 
-        //12
-
     case Tile::Type::EDGE_WT_GL13:
         tile.sprite.setTextureRect({w * 7, h * 3, w, h});
         break;
@@ -964,20 +918,17 @@ void Map::PushTile(sf::Vector2f position, Tile::Type type)
         tile.sprite.setTextureRect({w * 2, h * 1, w, h});
         break;
 
-    case Tile::Type::WALL:
-        tile.sprite.setTextureRect({w * 0, h * 0, w, h});
-        // tile.sprite.setColor(sf::Color(40, 0, 0));
-        this->wallTiles.push_back(tile.sprite.getGlobalBounds());
-        isWall = true;
-        break;
-
     default:
         tile.sprite.setTextureRect({w * 0, h * 0, w, h});
         break;
     }
 
-    // if (!isWall)
-    mapTiles.push_back(tile);
+    if (tile.type >= Tile::Type::WALL) {
+        // tile.sprite.setTextureRect({w * 0, h * 0, w, h});
+        // tile.sprite.setColor(sf::Color(40, 0, 0));
+        this->wallTiles.push_back(tile.sprite.getGlobalBounds());
+    }
+        mapTiles.push_back(tile);
     isWall = false;
 }
 
