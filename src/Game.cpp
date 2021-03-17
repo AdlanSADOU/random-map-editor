@@ -10,6 +10,8 @@
 #include <windows.h>
 #endif
 
+extern std::vector<sf::RectangleShape *> currentSelectedGridSquares; // !!!!!!!!!!!!!!!!!!
+
 std::vector<std::string> fileNames;
 std::vector<sf::Texture> spriteSheetTextures;
 
@@ -123,7 +125,8 @@ void run()
 
         else {
             sf::Event e;
-            ImGuiIO   io;
+            ImGuiIO   io = ImGui::GetIO();
+
             while (window.pollEvent(e)) {
                 ImGui::SFML::ProcessEvent(e);
                 sf::FloatRect fRect     = {0, 0, (float)e.size.width, (float)e.size.height};
@@ -131,13 +134,14 @@ void run()
 
                 switch (e.type) {
                 case sf::Event::MouseWheelScrolled:
-                    renTexView.zoom(zoomDelta += (0.03f * e.mouseWheelScroll.delta));
-                    printf("%f\n", zoomDelta);
-                    zoomDelta = 1;
+                    if (io.WantCaptureMouse == false) {
+                        renTexView.zoom(zoomDelta += (0.03f * e.mouseWheelScroll.delta));
+                        printf("%f\n", zoomDelta);
+                        zoomDelta = 1;
+                    }
                     break;
                 case sf::Event::EventType::Resized:
                     renTexView.setSize({(float)e.size.width, (float)e.size.height});
-                    // renTexView.zoom(zoom);
                     break;
                 case sf::Event::Closed:
                     // window.close();
@@ -164,12 +168,14 @@ void run()
                 map.generate();
                 map.render();
 
-                // renderMapBuilderGrid(window, map);
+                renderMapBuilderGrid(window, map); // ambiguous naming, this just redraws the grid
+                currentSelectedGridSquares.clear();
             }
 
             ImGui::SFML::Update(window, deltaClock.restart());
 
             renTexView.setCenter(skeleton.getPosition());
+
             window.setView(renTexView);
             window.clear(sf::Color(12, 12, 12, 255));
 
@@ -181,16 +187,15 @@ void run()
 
             { //* render()
                 window.draw(map);
-                //renderMapBuilder(window);
+                renderMapBuilder(window);
                 window.draw(skeleton);
             }
 
-            ImGui::ShowDemoWindow();
+            // ImGui::ShowDemoWindow();
             ImGui::Begin("Info", &p_open, fpsFlags);
             ImGui::Text("fps: %.2f, %.2fms", fps, deltaTime);
             ImGui::End();
 
-            window.setView(defaultView);
             ImGui::SFML::Render(window);
 
             window.display();
@@ -231,18 +236,25 @@ void onKeyHeld(sf::Keyboard::Key key)
         break;
     case sf::Keyboard::LShift:
         controls.shift = true;
-        if (yAxis > -0.16 && yAxis < 0.01)
-            yAxis = 0;
-        else
-            yAxis -= yAxis / 10 * deltaTime;
-        if (xAxis > -0.16 && xAxis < 0.01)
-            xAxis = 0;
-        else
-            xAxis -= xAxis / 10 * deltaTime;
+
         break;
     default:
         break;
     }
+
+    if (controls.up) yAxis += -0.1;
+    if (controls.down) yAxis += 0.1;
+    if (controls.left) xAxis += -0.1;
+    if (controls.right) xAxis += 0.1;
+
+    if (yAxis > -0.16 && yAxis < 0.01)
+        yAxis = 0;
+    else
+        yAxis -= yAxis / 10 * deltaTime;
+    if (xAxis > -0.16 && xAxis < 0.01)
+        xAxis = 0;
+    else
+        xAxis -= xAxis / 10 * deltaTime;
 }
 
 void onKeyUp(sf::Keyboard::Key key)

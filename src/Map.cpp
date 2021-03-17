@@ -1,7 +1,7 @@
 /**
  * seems like we are done adding all tile types
  * code should be cleaned up
- * ask community if there is a standart way to name those tiles
+ * ask community if there is a standard way to name those tiles
  */
 
 #include "Map.hpp"
@@ -16,8 +16,8 @@ bool **Map::create(sf::Vector2u windowSize, sf::Vector2i size, int birthLimit,
     this->_steps              = steps;
 
     // TODO: hardcoded spritesheet paths
-    floorsTileset.loadFromFile("./res/sprites/floors.png");
-    wallsTileset.loadFromFile("./res/sprites/walls.png");
+    floorsTileset.loadFromFile("./res/sprites/default.png");
+    wallsTileset.loadFromFile("./res/sprites/default_walls.png");
 
     this->_map = new bool *[this->_size.x];
     for (int i = 0; i < this->_size.x; ++i)
@@ -27,7 +27,7 @@ bool **Map::create(sf::Vector2u windowSize, sf::Vector2i size, int birthLimit,
     for (int i = 0; i < this->_size.x; ++i)
         _mapTmp[i] = new bool[this->_size.y];
 
-    renderTexture.create(windowSize.x * 2, windowSize.y * 2);
+    renderTexture.create(windowSize.x * 4, windowSize.y * 4);
     return generate();
 }
 
@@ -656,6 +656,8 @@ void Map::printMap()
     }
 }
 
+extern std::string tileTypes[];
+
 void Map::PushTile(sf::Vector2f position, Tile::Type type)
 {
     /**
@@ -677,258 +679,263 @@ void Map::PushTile(sf::Vector2f position, Tile::Type type)
     tile.sprite.setPosition(position);
 
     bool isWall = false;
-    switch (type) {
-    case Tile::Type::OUTER:
-        tile.sprite.setTextureRect({w * 0, h * 0, w, h});
-        break;
-    case Tile::Type::GROUND:
-        tile.sprite.setTextureRect({w * 1, h * 0, w, h});
-        break;
-    case Tile::Type::GROUND_LOOP:
-        tile.sprite.setTextureRect({w * 1, h * 3, w, h});
-        break;
+    if (this->mappedTiles[type].getSize().x == 0) {
+        switch (type) {
+        case Tile::Type::OUTER:
+            tile.sprite.setTextureRect({w * 0, h * 0, w, h});
+            break;
+        case Tile::Type::GROUND:
+            tile.sprite.setTextureRect({w * 1, h * 0, w, h});
+            break;
+        case Tile::Type::GROUND_LOOP:
+            tile.sprite.setTextureRect({w * 1, h * 3, w, h});
+            break;
 
-    case Tile::Type::TOP:
-        tile.sprite.setTextureRect({w * 2, h * 0, w, h});
-        break;
-    case Tile::Type::LEFT:
-        tile.sprite.setTextureRect({w * 3, h * 0, w, h});
-        break;
-    case Tile::Type::BOTTOM:
-        tile.sprite.setTextureRect({w * 4, h * 1, w, h});
-        break;
-    case Tile::Type::RIGHT:
-        tile.sprite.setTextureRect({w * 0, h * 1, w, h});
-        break;
+        case Tile::Type::TOP:
+            tile.sprite.setTextureRect({w * 2, h * 0, w, h});
+            break;
+        case Tile::Type::LEFT:
+            tile.sprite.setTextureRect({w * 3, h * 0, w, h});
+            break;
+        case Tile::Type::BOTTOM:
+            tile.sprite.setTextureRect({w * 4, h * 1, w, h});
+            break;
+        case Tile::Type::RIGHT:
+            tile.sprite.setTextureRect({w * 0, h * 1, w, h});
+            break;
 
-    case Tile::Type::TOP_LEFT:
-        tile.sprite.setTextureRect({w * 4, h * 0, w, h});
-        break;
-    case Tile::Type::TOP_RIGHT:
-        tile.sprite.setTextureRect({w * 1, h * 1, w, h});
-        break;
-    case Tile::Type::BOTTOM_LEFT:
-        tile.sprite.setTextureRect({w * 1, h * 2, w, h});
-        break;
-    case Tile::Type::BOTTOM_RIGHT:
-        tile.sprite.setTextureRect({w * 3, h * 2, w, h});
-        break;
+        case Tile::Type::TOP_LEFT:
+            tile.sprite.setTextureRect({w * 4, h * 0, w, h});
+            break;
+        case Tile::Type::TOP_RIGHT:
+            tile.sprite.setTextureRect({w * 1, h * 1, w, h});
+            break;
+        case Tile::Type::BOTTOM_LEFT:
+            tile.sprite.setTextureRect({w * 1, h * 2, w, h});
+            break;
+        case Tile::Type::BOTTOM_RIGHT:
+            tile.sprite.setTextureRect({w * 3, h * 2, w, h});
+            break;
 
-    case Tile::Type::LEFT_RIGHT:
-        tile.sprite.setTextureRect({w * 2, h * 1, w, h});
-        break;
-    case Tile::Type::TOP_BOTTOM:
-        tile.sprite.setTextureRect({w * 0, h * 2, w, h});
-        break;
+        case Tile::Type::LEFT_RIGHT:
+            tile.sprite.setTextureRect({w * 2, h * 1, w, h});
+            break;
+        case Tile::Type::TOP_BOTTOM:
+            tile.sprite.setTextureRect({w * 0, h * 2, w, h});
+            break;
 
-    case Tile::Type::TOP_LEFT_RIGHT:
-        tile.sprite.setTextureRect({w * 3, h * 1, w, h});
-        break;
-    case Tile::Type::LEFT_TOP_BOTTOM:
-        tile.sprite.setTextureRect({w * 2, h * 2, w, h});
-        break;
-    case Tile::Type::BOTTOM_LEFT_RIGHT:
-        tile.sprite.setTextureRect({w * 0, h * 3, w, h});
-        break;
-    case Tile::Type::RIGHT_TOP_BOTTOM:
-        tile.sprite.setTextureRect({w * 4, h * 2, w, h});
-        break;
+        case Tile::Type::TOP_LEFT_RIGHT:
+            tile.sprite.setTextureRect({w * 3, h * 1, w, h});
+            break;
+        case Tile::Type::LEFT_TOP_BOTTOM:
+            tile.sprite.setTextureRect({w * 2, h * 2, w, h});
+            break;
+        case Tile::Type::BOTTOM_LEFT_RIGHT:
+            tile.sprite.setTextureRect({w * 0, h * 3, w, h});
+            break;
+        case Tile::Type::RIGHT_TOP_BOTTOM:
+            tile.sprite.setTextureRect({w * 4, h * 2, w, h});
+            break;
 
-    case Tile::Type::WALL_TOP:
-        tile.sprite.setTextureRect({w * 2, h * 5, w, h});
-        break;
-    case Tile::Type::WALL_LEFT:
-        tile.sprite.setTextureRect({w * 4, h * 4, w, h});
-        break;
-    case Tile::Type::WALL_BOTTOM:
-        tile.sprite.setTextureRect({w * 4, h * 1, w, h});
-        break;
-    case Tile::Type::WALL_RIGHT:
-        tile.sprite.setTextureRect({w * 4, h * 3, w, h});
-        break;
-    case Tile::Type::WALL_TOP_LEFT:
-        tile.sprite.setTextureRect({w * 2, h * 4, w, h});
-        break;
-    case Tile::Type::WALL_TOP_RIGHT:
-        tile.sprite.setTextureRect({w * 2, h * 3, w, h});
-        break;
-    case Tile::Type::WALL_BOTTOM_LEFT:
-        tile.sprite.setTextureRect({w * 7, h * 0, w, h});
-        break;
-    case Tile::Type::WALL_BOTTOM_RIGHT:
-        tile.sprite.setTextureRect({w * 4, h * 0, w, h});
-        break;
+        case Tile::Type::WALL_TOP:
+            tile.sprite.setTextureRect({w * 2, h * 5, w, h});
+            break;
+        case Tile::Type::WALL_LEFT:
+            tile.sprite.setTextureRect({w * 4, h * 4, w, h});
+            break;
+        case Tile::Type::WALL_BOTTOM:
+            tile.sprite.setTextureRect({w * 4, h * 1, w, h});
+            break;
+        case Tile::Type::WALL_RIGHT:
+            tile.sprite.setTextureRect({w * 4, h * 3, w, h});
+            break;
+        case Tile::Type::WALL_TOP_LEFT:
+            tile.sprite.setTextureRect({w * 2, h * 4, w, h});
+            break;
+        case Tile::Type::WALL_TOP_RIGHT:
+            tile.sprite.setTextureRect({w * 2, h * 3, w, h});
+            break;
+        case Tile::Type::WALL_BOTTOM_LEFT:
+            tile.sprite.setTextureRect({w * 7, h * 0, w, h});
+            break;
+        case Tile::Type::WALL_BOTTOM_RIGHT:
+            tile.sprite.setTextureRect({w * 4, h * 0, w, h});
+            break;
 
-    case Tile::Type::WALL_TOP_LEFT_RIGHT:
-        tile.sprite.setTextureRect({w * 5, h * 1, w, h});
-        break;
-    case Tile::Type::WALL_LEFT_TOP_BOTTOM:
-        tile.sprite.setTextureRect({w * 5, h * 0, w, h});
-        break;
-    case Tile::Type::WALL_BOTTOM_LEFT_RIGHT:
-        tile.sprite.setTextureRect({w * 1, h * 0, w, h});
-        break;
-    case Tile::Type::WALL_RIGHT_TOP_BOTTOM:
-        tile.sprite.setTextureRect({w * 2, h * 0, w, h});
-        break;
+        case Tile::Type::WALL_TOP_LEFT_RIGHT:
+            tile.sprite.setTextureRect({w * 5, h * 1, w, h});
+            break;
+        case Tile::Type::WALL_LEFT_TOP_BOTTOM:
+            tile.sprite.setTextureRect({w * 5, h * 0, w, h});
+            break;
+        case Tile::Type::WALL_BOTTOM_LEFT_RIGHT:
+            tile.sprite.setTextureRect({w * 1, h * 0, w, h});
+            break;
+        case Tile::Type::WALL_RIGHT_TOP_BOTTOM:
+            tile.sprite.setTextureRect({w * 2, h * 0, w, h});
+            break;
 
-    case Tile::Type::WALLS_TOP_LEFT_CORNER_TL:
-        tile.sprite.setTextureRect({w * 5, h * 5, w, h});
-        break;
-    case Tile::Type::WALLS_TOP_LEFT_BOTTOM_CORNER_TL_BL:
-        tile.sprite.setTextureRect({w * 0, h * 5, w, h});
-        break;
-    case Tile::Type::WALLS_TOP_LEFT_BOTTOM_RIGHT_CORNER_TL_BL_TR:
-        tile.sprite.setTextureRect({w * 6, h * 4, w, h});
-        break;
-    case Tile::Type::WALLS_TOP_LEFT_BOTTOM_RIGHT_CORNER_TL_BL_TR_BR:
-        tile.sprite.setTextureRect({w * 6, h * 2, w, h});
-        break;
-    case Tile::Type::WALLS_TOP_LEFT_RIGHT_CORNER_TL_TR:
-        tile.sprite.setTextureRect({w * 3, h * 5, w, h});
-        break;
-    case Tile::Type::WALL_LOOP:
-        tile.sprite.setTextureRect({w * 7, h * 5, w, h});
-        break;
+        case Tile::Type::WALLS_TOP_LEFT_CORNER_TL:
+            tile.sprite.setTextureRect({w * 5, h * 5, w, h});
+            break;
+        case Tile::Type::WALLS_TOP_LEFT_BOTTOM_CORNER_TL_BL:
+            tile.sprite.setTextureRect({w * 0, h * 5, w, h});
+            break;
+        case Tile::Type::WALLS_TOP_LEFT_BOTTOM_RIGHT_CORNER_TL_BL_TR:
+            tile.sprite.setTextureRect({w * 6, h * 4, w, h});
+            break;
+        case Tile::Type::WALLS_TOP_LEFT_BOTTOM_RIGHT_CORNER_TL_BL_TR_BR:
+            tile.sprite.setTextureRect({w * 6, h * 2, w, h});
+            break;
+        case Tile::Type::WALLS_TOP_LEFT_RIGHT_CORNER_TL_TR:
+            tile.sprite.setTextureRect({w * 3, h * 5, w, h});
+            break;
+        case Tile::Type::WALL_LOOP:
+            tile.sprite.setTextureRect({w * 7, h * 5, w, h});
+            break;
 
-    case Tile::Type::EDGE_TB:
-        tile.sprite.setTextureRect({w * 0, h * 1, w, h});
-        break;
-    case Tile::Type::EDGE_LR:
-        tile.sprite.setTextureRect({w * 6, h * 1, w, h});
-        break;
-    case Tile::Type::EDGE_WT_GL:
-        tile.sprite.setTextureRect({w * 6, h * 4, w, h});
-        break;
-    case Tile::Type::EDGE_WT_GL1:
-        tile.sprite.setTextureRect({w * 0, h * 5, w, h});
-        break;
-    case Tile::Type::EDGE_WT_GL2:
-        tile.sprite.setTextureRect({w * 3, h * 5, w, h});
-        break;
-    case Tile::Type::EDGE_WT_GL3:
-        tile.sprite.setTextureRect({w * 1, h * 3, w, h});
-        break;
-    case Tile::Type::EDGE_WT_GL4:
-        tile.sprite.setTextureRect({w * 1, h * 4, w, h});
-        break;
-    case Tile::Type::EDGE_WT_GL5:
-        tile.sprite.setTextureRect({w * 1, h * 5, w, h});
-        break;
-    case Tile::Type::EDGE_WT_GL6:
-        tile.sprite.setTextureRect({w * 5, h * 5, w, h});
-        break;
-    case Tile::Type::EDGE_WT_GL7:
-        tile.sprite.setTextureRect({w * 4, h * 5, w, h});
-        break;
-    case Tile::Type::EDGE_WT_GL8:
-        tile.sprite.setTextureRect({w * 2, h * 1, w, h});
-        break;
-    case Tile::Type::EDGE_WT_GL9:
-        tile.sprite.setTextureRect({w * 4, h * 2, w, h});
-        break;
-    case Tile::Type::EDGE_WT_GL10:
-        tile.sprite.setTextureRect({w * 1, h * 2, w, h});
-        break;
-    case Tile::Type::EDGE_WT_GL11:
-        tile.sprite.setTextureRect({w * 4, h * 2, w, h});
-        break;
+        case Tile::Type::EDGE_TB:
+            tile.sprite.setTextureRect({w * 0, h * 1, w, h});
+            break;
+        case Tile::Type::EDGE_LR:
+            tile.sprite.setTextureRect({w * 6, h * 1, w, h});
+            break;
+        case Tile::Type::EDGE_WT_GL:
+            tile.sprite.setTextureRect({w * 6, h * 4, w, h});
+            break;
+        case Tile::Type::EDGE_WT_GL1:
+            tile.sprite.setTextureRect({w * 0, h * 5, w, h});
+            break;
+        case Tile::Type::EDGE_WT_GL2:
+            tile.sprite.setTextureRect({w * 3, h * 5, w, h});
+            break;
+        case Tile::Type::EDGE_WT_GL3:
+            tile.sprite.setTextureRect({w * 1, h * 3, w, h});
+            break;
+        case Tile::Type::EDGE_WT_GL4:
+            tile.sprite.setTextureRect({w * 1, h * 4, w, h});
+            break;
+        case Tile::Type::EDGE_WT_GL5:
+            tile.sprite.setTextureRect({w * 1, h * 5, w, h});
+            break;
+        case Tile::Type::EDGE_WT_GL6:
+            tile.sprite.setTextureRect({w * 5, h * 5, w, h});
+            break;
+        case Tile::Type::EDGE_WT_GL7:
+            tile.sprite.setTextureRect({w * 4, h * 5, w, h});
+            break;
+        case Tile::Type::EDGE_WT_GL8:
+            tile.sprite.setTextureRect({w * 2, h * 1, w, h});
+            break;
+        case Tile::Type::EDGE_WT_GL9:
+            tile.sprite.setTextureRect({w * 4, h * 2, w, h});
+            break;
+        case Tile::Type::EDGE_WT_GL10:
+            tile.sprite.setTextureRect({w * 1, h * 2, w, h});
+            break;
+        case Tile::Type::EDGE_WT_GL11:
+            tile.sprite.setTextureRect({w * 4, h * 2, w, h});
+            break;
 
-    case Tile::Type::EDGE_WT_GL13:
-        tile.sprite.setTextureRect({w * 7, h * 3, w, h});
-        break;
-    case Tile::Type::EDGE_WT_GL14:
-        tile.sprite.setTextureRect({w * 2, h * 2, w, h});
-        break;
-    case Tile::Type::EDGE_WT_GL15:
-        tile.sprite.setTextureRect({w * 0, h * 4, w, h});
-        break;
-    case Tile::Type::EDGE_WT_GL16:
-        tile.sprite.setTextureRect({w * 3, h * 0, w, h});
-        break;
-    case Tile::Type::EDGE_WT_GL17:
-        tile.sprite.setTextureRect({w * 5, h * 4, w, h});
-        break;
-    case Tile::Type::EDGE_WT_GL18:
-        tile.sprite.setTextureRect({w * 7, h * 4, w, h});
-        break;
-    case Tile::Type::EDGE_WT_GL19:
-        tile.sprite.setTextureRect({w * 3, h * 3, w, h});
-        break;
-    case Tile::Type::EDGE_WT_GL20:
-        tile.sprite.setTextureRect({w * 1, h * 2, w, h});
-        break;
-    case Tile::Type::EDGE_WT_GL21:
-        tile.sprite.setTextureRect({w * 0, h * 2, w, h});
-        break;
-    case Tile::Type::EDGE_WT_GL22:
-        tile.sprite.setTextureRect({w * 3, h * 1, w, h});
-        break;
-    case Tile::Type::EDGE_WT_GL23:
-        tile.sprite.setTextureRect({w * 0, h * 2, w, h});
-        break;
-    case Tile::Type::EDGE_WT_GL24:
-        tile.sprite.setTextureRect({w * 3, h * 4, w, h});
-        break;
-    case Tile::Type::EDGE_WT_GL25:
-        tile.sprite.setTextureRect({w * 5, h * 3, w, h});
-        break;
-    case Tile::Type::EDGE_WT_GL26:
-        tile.sprite.setTextureRect({w * 3, h * 2, w, h});
-        break;
-    case Tile::Type::EDGE_WT_GL27:
-        tile.sprite.setTextureRect({w * 7, h * 2, w, h});
-        break;
-    case Tile::Type::EDGE_WT_GL28:
-        tile.sprite.setTextureRect({w * 7, h * 2, w, h});
-        break;
-    case Tile::Type::EDGE_WT_GL29:
-        tile.sprite.setTextureRect({w * 6, h * 3, w, h});
-        break;
-    case Tile::Type::EDGE_WT_GL30:
-        tile.sprite.setTextureRect({w * 6, h * 3, w, h});
-        break;
-    case Tile::Type::EDGE_WT_GL31:
-        tile.sprite.setTextureRect({w * 0, h * 3, w, h});
-        break;
-    case Tile::Type::EDGE_WT_GL32:
-        tile.sprite.setTextureRect({w * 5, h * 2, w, h});
-        break;
+        case Tile::Type::EDGE_WT_GL13:
+            tile.sprite.setTextureRect({w * 7, h * 3, w, h});
+            break;
+        case Tile::Type::EDGE_WT_GL14:
+            tile.sprite.setTextureRect({w * 2, h * 2, w, h});
+            break;
+        case Tile::Type::EDGE_WT_GL15:
+            tile.sprite.setTextureRect({w * 0, h * 4, w, h});
+            break;
+        case Tile::Type::EDGE_WT_GL16:
+            tile.sprite.setTextureRect({w * 3, h * 0, w, h});
+            break;
+        case Tile::Type::EDGE_WT_GL17:
+            tile.sprite.setTextureRect({w * 5, h * 4, w, h});
+            break;
+        case Tile::Type::EDGE_WT_GL18:
+            tile.sprite.setTextureRect({w * 7, h * 4, w, h});
+            break;
+        case Tile::Type::EDGE_WT_GL19:
+            tile.sprite.setTextureRect({w * 3, h * 3, w, h});
+            break;
+        case Tile::Type::EDGE_WT_GL20:
+            tile.sprite.setTextureRect({w * 1, h * 2, w, h});
+            break;
+        case Tile::Type::EDGE_WT_GL21:
+            tile.sprite.setTextureRect({w * 0, h * 2, w, h});
+            break;
+        case Tile::Type::EDGE_WT_GL22:
+            tile.sprite.setTextureRect({w * 3, h * 1, w, h});
+            break;
+        case Tile::Type::EDGE_WT_GL23:
+            tile.sprite.setTextureRect({w * 0, h * 2, w, h});
+            break;
+        case Tile::Type::EDGE_WT_GL24:
+            tile.sprite.setTextureRect({w * 3, h * 4, w, h});
+            break;
+        case Tile::Type::EDGE_WT_GL25:
+            tile.sprite.setTextureRect({w * 5, h * 3, w, h});
+            break;
+        case Tile::Type::EDGE_WT_GL26:
+            tile.sprite.setTextureRect({w * 3, h * 2, w, h});
+            break;
+        case Tile::Type::EDGE_WT_GL27:
+            tile.sprite.setTextureRect({w * 7, h * 2, w, h});
+            break;
+        case Tile::Type::EDGE_WT_GL28:
+            tile.sprite.setTextureRect({w * 7, h * 2, w, h});
+            break;
+        case Tile::Type::EDGE_WT_GL29:
+            tile.sprite.setTextureRect({w * 6, h * 3, w, h});
+            break;
+        case Tile::Type::EDGE_WT_GL30:
+            tile.sprite.setTextureRect({w * 6, h * 3, w, h});
+            break;
+        case Tile::Type::EDGE_WT_GL31:
+            tile.sprite.setTextureRect({w * 0, h * 3, w, h});
+            break;
+        case Tile::Type::EDGE_WT_GL32:
+            tile.sprite.setTextureRect({w * 5, h * 2, w, h});
+            break;
 
-    case Tile::Type::EDGE_WT_GL33:
-        tile.sprite.setTextureRect({w * 6, h * 0, w, h});
-        break;
-    case Tile::Type::EDGE_WT_GL34:
-        tile.sprite.setTextureRect({w * 3, h * 0, w, h});
-        break;
-    case Tile::Type::EDGE_WT_GL35:
-        tile.sprite.setTextureRect({w * 2, h * 2, w, h});
-        break;
-    case Tile::Type::EDGE_WT_GL36:
-        tile.sprite.setTextureRect({w * 7, h * 1, w, h});
-        break;
-    case Tile::Type::EDGE_ALL:
-        tile.sprite.setTextureRect({w * 6, h * 2, w, h});
-        break;
+        case Tile::Type::EDGE_WT_GL33:
+            tile.sprite.setTextureRect({w * 6, h * 0, w, h});
+            break;
+        case Tile::Type::EDGE_WT_GL34:
+            tile.sprite.setTextureRect({w * 3, h * 0, w, h});
+            break;
+        case Tile::Type::EDGE_WT_GL35:
+            tile.sprite.setTextureRect({w * 2, h * 2, w, h});
+            break;
+        case Tile::Type::EDGE_WT_GL36:
+            tile.sprite.setTextureRect({w * 7, h * 1, w, h});
+            break;
+        case Tile::Type::EDGE_ALL:
+            tile.sprite.setTextureRect({w * 6, h * 2, w, h});
+            break;
 
-    case Tile::Type::WALL_TOP_BOTTOM:
-        tile.sprite.setTextureRect({w * 0, h * 1, w, h});
-        break;
-    case Tile::Type::WALL_LEFT_RIGHT:
-        tile.sprite.setTextureRect({w * 2, h * 1, w, h});
-        break;
+        case Tile::Type::WALL_TOP_BOTTOM:
+            tile.sprite.setTextureRect({w * 0, h * 1, w, h});
+            break;
+        case Tile::Type::WALL_LEFT_RIGHT:
+            tile.sprite.setTextureRect({w * 2, h * 1, w, h});
+            break;
 
-    default:
-        tile.sprite.setTextureRect({w * 0, h * 0, w, h});
-        break;
+        default:
+            tile.sprite.setTextureRect({w * 0, h * 0, w, h});
+            break;
+        }
+    } else {
+        printf("mappedTiles type[%d] texture size: %d\n", type, mappedTiles[type].getSize().x);
+        tile.sprite.setTexture(mappedTiles[type], true);
+
+        if (tile.type >= Tile::Type::WALL) {
+            // tile.sprite.setTextureRect({w * 0, h * 0, w, h});
+            // tile.sprite.setColor(sf::Color(40, 0, 0));
+            this->wallTiles.push_back(tile.sprite.getGlobalBounds());
+        }
     }
-
-    if (tile.type >= Tile::Type::WALL) {
-        // tile.sprite.setTextureRect({w * 0, h * 0, w, h});
-        // tile.sprite.setColor(sf::Color(40, 0, 0));
-        this->wallTiles.push_back(tile.sprite.getGlobalBounds());
-    }
-        mapTiles.push_back(tile);
+    mapTiles.push_back(tile);
     isWall = false;
 }
 

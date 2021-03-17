@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdio>
 #include <iostream>
+#include <map>
 #include <vector>
 
 #include "SFML/Graphics.hpp"
@@ -100,8 +101,9 @@ class Map : public sf::Sprite
         sf::Sprite sprite     = {};
     };
 
-    sf::RenderTexture          renderTexture;
-    std::vector<sf::FloatRect> wallTiles;
+    sf::RenderTexture                      renderTexture;
+    std::vector<sf::FloatRect>             wallTiles;
+    std::map<Map::Tile::Type, sf::Texture> mappedTiles;
 
     sf::Vector2i _size               = {40, 22};
     float        _chanceToStartAlive = 45;

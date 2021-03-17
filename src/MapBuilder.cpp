@@ -9,6 +9,7 @@ std::vector<sf::IntRect> tileRects;
 sf::Texture              tileTexture;
 sf::Sprite               tileSprite;
 
+
 /**
  * a spriteSheet should:
  * derive sf::Sprite
@@ -69,6 +70,7 @@ struct SpriteSheet {
 
 static std::vector<SpriteSheet> spriteSheets;
 
+// maybe we should make [enum,string] hashtab
 std::string tileTypes[]{
     {"GROUND"},
     {"GROUND_LOOP"},
@@ -152,10 +154,12 @@ std::string tileTypes[]{
     {"EDGE_WT_GL35"},
     {"EDGE_WT_GL36"},
     {"EDGE_ALL"},
-    };
+};
+
 
 void InitMapBuilder(sf::RenderWindow &window, Map &map)
 {
+    map.mappedTiles.clear();
     float width  = map.getGlobalBounds().width;
     float height = map.getGlobalBounds().height;
     gridRenderTexture.create(width, height);
@@ -165,15 +169,15 @@ void InitMapBuilder(sf::RenderWindow &window, Map &map)
         sheet1.create("res/sprites/walls.png", {32, 32});
         spriteSheets.push_back(sheet1);
     }
-    {
-        SpriteSheet sheet1;
-        sheet1.create("res/sprites/tile_set.png", {32, 32});
-        spriteSheets.push_back(sheet1);
-    }
+    // {
+    //     SpriteSheet sheet1;
+    //     sheet1.create("res/sprites/tile_set.png", {32, 32});
+    //     spriteSheets.push_back(sheet1);
+    // }
     renderMapBuilderGrid(window, map);
 }
 
-Map::Tile selectedTile;
+static Map::Tile selectedTile;
 
 void updateMapBuilder(sf::RenderWindow &window, Map &map)
 {
@@ -269,15 +273,25 @@ void updateMapBuilder(sf::RenderWindow &window, Map &map)
                         clickedIndex         = i;
                         selectedTilePosition = {(int)i % x, (int)y};
 
+                        // cache the tile we clicked on
                         Map::Tile selectedTile = map.mapTiles[selectedTileIdx];
+
+                        // looking for matching tile type with the selectedTile type defined above
+                        // currently we do not cache type matching textureRects/tileTypes
+                        // this might be a good place to cache the realation between both
                         for (size_t j = 0; j < map.mapTiles.size(); j++) {
                             if (map.mapTiles[j].type == selectedTile.type) {
                                 // map.mapTiles[j].sprite.setTextureRect(spriteSheets[k].rects[clickedIndex]);
                                 // Ni
-                                map.mapTiles[j].sprite.setTexture(spriteSheets[k].textures[clickedIndex], true);
+                                map.mappedTiles[selectedTile.type] = spriteSheets[k].textures[clickedIndex];
+
+                                // map.mapTiles[j].sprite.setTexture(spriteSheets[k].textures[clickedIndex], true);
+                                map.mapTiles[j].sprite.setTexture(map.mappedTiles[selectedTile.type], true);
                             }
                         }
                         map.redraw();
+                        renderMapBuilderGrid(window, map);
+
                         break;
                     }
                 }
@@ -289,8 +303,11 @@ void updateMapBuilder(sf::RenderWindow &window, Map &map)
     }
 }
 
+// should be drawn depending on user input;
+// line when hovering over the grid & clicking on a tile
 void renderMapBuilderGrid(sf::RenderWindow &window, Map &map)
 {
+
     grid.clear();
     for (int i = 0; i < map.mapTiles.size(); i++) {
         auto e = &map.mapTiles[i];
@@ -307,6 +324,7 @@ void renderMapBuilderGrid(sf::RenderWindow &window, Map &map)
         grid.push_back(square);
         gridRenderTexture.draw(square);
     }
+
     redrawMapBuilder();
 }
 
@@ -314,6 +332,7 @@ void renderMapBuilderGrid(sf::RenderWindow &window, Map &map)
 void redrawMapBuilder()
 {
     gridRenderTexture.clear(sf::Color::Transparent);
+    // currentSelectedGridSquares.clear();
 
     for (size_t i = 0; i < grid.size(); i++) {
         gridRenderTexture.draw(grid[i]);

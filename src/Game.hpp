@@ -19,7 +19,7 @@ static float deltaTime;
 static float fps;
 static float speed = 0.1f;
 static float xAxis = 0, yAxis = 0;
-static float zoom = 1;
+static float zoom = 0.5;
 static zz::Controls controls;
 static sf::RenderWindow window;
 static Character skeleton;
