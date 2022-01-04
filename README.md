@@ -4,7 +4,7 @@ A simple tool to generate a random map and fill it quickly with your tiles featu
 - Randomized map generation based on Cellular Automata
 - ImGui UI
 - Import sprite sheet by drag and drop
-- Auto multi selection of same tile types, fill then all at once
+- Auto multi selection of same tile types to fill them all at once
 
 YouTube link:
 
