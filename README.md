@@ -1,5 +1,7 @@
 A simple tool for randomly generating maps and placing tiles.
 
+Shortcut: press K to generate a new map
+
 ## Features:
 - Randomized map generation based on Cellular Automata
 - Auto multi selection of same tile types to fill them all at once
